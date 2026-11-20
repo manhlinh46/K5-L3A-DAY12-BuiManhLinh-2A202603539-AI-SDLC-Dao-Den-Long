@@ -8,6 +8,8 @@
   <style>
     /* Ticket-02 standard palette */
     :root { --sky:#0E1430; --fog:#1B2350; --lit:#FFB347; --core:#FFE9B0; --off:#5B5F6E; --gold:#F2C14E; --danger:#FF5A5F; --text:#F5F1E6; --scarf:#C8102E; --drifter:#8FA3B8; --panel: rgba(14,20,48,.82); }
+    /* colour-blind friendly palette (Ticket-03 §6) */
+    :root.cb { --danger:#FFFFFF; }
     html, body { margin: 0; height: 100%; overflow: hidden; background: var(--sky); font-family: system-ui, "Segoe UI", sans-serif; color: var(--text); user-select: none; }
     canvas { display: block; }
     .hud { position: fixed; pointer-events: none; }
@@ -24,6 +26,8 @@
     #bar { bottom: 18px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; }
     .slot { width: 22px; height: 22px; border-radius: 50%; border: 2px solid rgba(242,193,78,.55); background: rgba(14,20,48,.6); }
     .slot.on { background: radial-gradient(circle, #FFF6C2 30%, #FFE58A 70%); box-shadow: 0 0 10px #FFE58A; border-color: var(--gold); }
+    #carryText { bottom: 21px; left: calc(50% + 290px); font-size: 15px; color: var(--gold); }
+    .slot { width: 18px !important; height: 18px !important; }
     #hint { bottom: 52px; left: 50%; transform: translateX(-50%); font-size: 16px; padding: 5px 14px; border-radius: 8px; background: var(--panel); border: 1px solid rgba(242,193,78,.5); }
     #cds { bottom: 14px; right: 16px; display: flex; gap: 12px; }
     .cd { position: relative; width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; text-align: center; line-height: 1.1;
@@ -61,6 +65,7 @@
     <div id="topright" class="hud"><div id="nightName"></div>Đèn <b id="lit">0/5</b><br>Điểm <b id="score">0</b></div>
     <div id="hint" class="hud hidden"></div>
     <div id="bar" class="hud"></div>
+    <div id="carryText" class="hud"></div>
     <div id="charmTag" class="hud hidden">Bùa Gió</div>
     <div id="cds" class="hud">
       <div class="cd" id="cdDash"><span>Lướt<br>Shift</span></div>
@@ -75,13 +80,13 @@
   <div id="ovMenu" class="overlay">
     <div class="card">
       <h1>Đảo Đèn Lồng</h1>
-      <p>Sương đen đã nuốt ánh sáng của ba hòn đảo. Hãy giúp Mây gom đom đóm và thắp lại các Đèn Lồng Lớn trước bình minh.</p>
+      <p>Sương đen đã nuốt ánh sáng của ba hòn đảo. Hãy giúp Mây gom đom đóm, thắp các Đèn Lồng Lớn và giữ chúng cháy tới bình minh.</p>
       <div class="keys">
         <kbd>W A S D</kbd><span>Di chuyển (theo hướng camera)</span>
         <kbd>Kéo chuột / ← →</kbd><span>Xoay camera</span>
         <kbd>Space</kbd><span>Nhảy</span>
         <kbd>Shift</kbd><span>Lướt</span>
-        <kbd>E</kbd><span>Nạp ánh sáng vào đèn</span>
+        <kbd>E</kbd><span>Nạp ánh sáng / châm dầu cho đèn</span>
         <kbd>Q</kbd><span>Tỏa Sáng (3 đom đóm)</span>
         <kbd>Esc / P</kbd><span>Tạm dừng</span>
       </div>
@@ -94,6 +99,7 @@
   <div id="ovSettings" class="overlay hidden"><div class="card"><h1>Cài đặt</h1>
     <label>Âm lượng <input type="range" id="setVol" min="0" max="1" step="0.05" /></label>
     <label>Độ nhạy chuột <input type="range" id="setSens" min="0.2" max="2.5" step="0.05" /></label>
+    <label>Bảng màu dễ phân biệt <input type="checkbox" id="setCb" /></label>
     <div class="btns"><button data-act="closeSettings">Xong</button></div></div></div>
   <div id="ovDawn" class="overlay hidden"><div class="card"><h2>Bình Minh</h2><h1>Ba hòn đảo đã sáng!</h1><p class="quote">"Giỏi lắm, Mây. Nắng sớm đã về trên biển mây." — Ông Đăng</p><p>Tổng điểm</p><p class="score" id="dawnScore"></p><div class="btns"><button data-act="menu">Về menu</button></div></div></div>
   <script type="module" src="/web/main.js"></script>

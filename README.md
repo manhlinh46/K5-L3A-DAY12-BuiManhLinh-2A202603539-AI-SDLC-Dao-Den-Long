@@ -22,33 +22,34 @@ Tham số URL tùy chọn: `?night=2` bắt đầu từ Đêm 2 (luyện tập h
 | Kéo chuột / ← → | Xoay camera (độ nhạy chỉnh trong Cài đặt) |
 | Space | Nhảy |
 | Shift | Lướt: 14 m/s trong 0.2 s, hồi chiêu 1.5 s |
-| E | Nạp ánh sáng vào đèn (đứng trong 2 m quanh đèn chưa sáng) |
+| E | Nạp ánh sáng / châm dầu (đứng trong 2 m quanh đèn) |
 | Q | Tỏa Sáng: tốn 3 đom đóm, làm choáng và đẩy lùi Bóng Mực trong 5 m, hồi chiêu 3 s |
 | Esc / P | Tạm dừng: Tiếp tục / Chơi lại Đêm / Cài đặt / Về menu |
 
-## Luật và cách tính điểm (số chuẩn Ticket-02)
+## Luật và cách tính điểm (Ticket-03, Contract v1.2)
 
-- **Chuỗi 3 Đêm:** Đảo Bến (5 đèn, 300 s), Đảo Cau (6 đèn, 330 s, hai đảo nối bằng cầu tre, có bục nhảy), Đảo Chuông (7 đèn, 360 s, 3 tầng, dốc, bục nhảy, gió mạnh). Thắng Đêm 3 thì hiện màn Bình Minh. Thua thì chơi lại Đêm đó.
-- Mây có **3 Ngọn Lửa**, hồi đầy đầu mỗi Đêm. Bị Bóng Mực chạm: −1 lửa, rơi một nửa số đom đóm ra quanh mình (nhặt lại được trong 8 s), bất tử 1.5 s. Rơi xuống biển mây: −1 lửa, mất hết đom đóm, hồi sinh ở điểm xuất phát.
-- Mang tối đa 10 đom đóm. Mỗi đèn cần 10, nạp nhiều lần được. Đèn **đã sáng** tạo vùng an toàn 6 m mà Bóng Mực không vào được.
-- **Gió Lạc** (Đêm 2, 3) đuổi khi bạn mang ≥ 5 đom đóm và cướp 3 con. Tỏa Sáng trúng nó thì nó bỏ chạy, hoặc đánh rơi đồ đã cướp.
-- **Bùa Gió** (Đêm 2, 3): trong 10 s chạy 7.2 m/s và lướt không hồi chiêu.
+- **Mục tiêu:** giữ đảo sáng tới bình minh. Đêm 1/2/3 dài 240/270/300 s. Thắng khi tới bình minh Mây còn sống và số đèn đang sáng ≥ 3/5, 4/6, 5/7. Thắp đủ đèn **không** kết thúc Đêm sớm. Hết Ngọn Lửa thì thua ngay.
+- **Dầu đèn:** đèn vừa thắp có 100 dầu, hao 1/giây và tắt khi cạn. Đứng cạnh đèn đang sáng bấm E để **châm dầu** (mỗi đom đóm +10 dầu). Đèn từng sáng chỉ cần 5 đom đóm để **thắp lại** (lần đầu cần 10). Đèn có dầu < 30 nhấp nháy và **mất vùng an toàn**.
+- **Bóng Mực hút dầu:** Bóng Mực đang lang thang sẽ tìm tới đèn yếu (< 30 dầu) để hút 5 dầu/giây. Tỏa Sáng trúng con đang hút được +15. Châm dầu lên ≥ 30 sẽ đẩy chúng ra ngoài.
+- **Sức chứa** tăng theo số lần thắp thành công: 10 + 2 × lần thắp, tối đa 20.
+- Mây có **3 Ngọn Lửa**. Bị Bóng Mực chạm: −1 lửa, rơi một nửa số đom đóm ra quanh mình (nhặt lại được trong 8 s). Rơi xuống biển mây: −1 lửa, mất hết đom đóm, hồi sinh ở điểm xuất phát.
+- **Gió Lạc** (Đêm 2, 3) cướp đom đóm. **Bùa Gió** cho chạy nhanh và lướt liên tục trong 10 s. Đêm 3 có gió mạnh.
 
 | Sự kiện | Điểm |
 |---|---|
-| Mỗi đom đóm **nạp** vào đèn | +10 |
-| Thắp 1 đèn | +100 |
-| Mỗi Bóng Mực trúng Tỏa Sáng (mỗi lần) | +5 |
-| Khi thắng Đêm: mỗi giây còn lại | +2 |
-| Khi thắng Đêm: mỗi Ngọn Lửa còn lại | +50 |
+| Mỗi đom đóm nạp vào đèn (thắp mới, thắp lại, châm dầu) | +5 |
+| Thắp lần đầu / thắp lại | +100 / +40 |
+| Bóng Mực trúng Tỏa Sáng | +5 (+15 nếu nó đang hút dầu) |
+| Bình minh (khi thắng): mỗi đèn đang sáng | +50 + phần nguyên số dầu còn lại |
+| Bình minh (khi thắng): mỗi Ngọn Lửa còn lại | +50 |
 
-Tổng điểm là tổng điểm các Đêm đã thắng.
+Tổng điểm game là tổng điểm các Đêm đã thắng. Cài đặt có tùy chọn **Bảng màu dễ phân biệt** cho người mù màu.
 
-## Kiểm thử và chế độ headless (Test Contract v1.1)
+## Kiểm thử và chế độ headless (Test Contract v1.2)
 
 ```bash
-npm test                         # unit + CLI + 20 scenario headless + tất định + hiệu năng
-npm run proof -- 2               # sinh bằng chứng vào docs/proof/phase-2/
+npm test                         # unit + CLI + 27 scenario headless + tất định + hiệu năng
+npm run proof -- 3               # sinh bằng chứng vào docs/proof/phase-3/
 node src/headless.js --seed 1 --night 1|2|3 --ticks 600 --out out.jsonl \
      [--scenario s.json] [--inputs i.json] [--snapshot-every 10]
 ```
@@ -72,6 +73,7 @@ AGENTS.md, .claude/  harness AI (skill verify-game, Stop hook chặn kết thúc
 ## Bằng chứng và ghi chép
 
 - Phase 1: [notes](docs/notes/phase-1.md) · [proof](docs/proof/phase-1/SUMMARY.md)
+- Phase 3: [notes + test đã thay](docs/notes/phase-3.md) · [ADR 0001](docs/adr/0001-lantern-fuel-and-dawn-win.md) · [CHANGELOG](CHANGELOG.md) · [proof](docs/proof/phase-3/SUMMARY.md)
 - Phase 2: [spec + acceptance criteria + nhật ký AI](docs/notes/phase-2.md) · [proof](docs/proof/phase-2/SUMMARY.md) · [ảnh chụp](docs/proof/phase-2/screenshots/) · FPS: [Đêm 1](docs/proof/phase-2/fps-night1.json), [Đêm 2](docs/proof/phase-2/fps-night2.json), [Đêm 3](docs/proof/phase-2/fps-night3.json)
 
 ## Sáng tạo của tôi

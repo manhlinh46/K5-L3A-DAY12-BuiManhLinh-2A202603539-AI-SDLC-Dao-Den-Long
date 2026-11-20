@@ -1,6 +1,6 @@
 # AGENTS.md — Đảo Đèn Lồng
 
-3D web game (Three.js) + deterministic headless sim, Test Contract **v1.1** (3 nights). Requirements: lab board PRD-0 + Ticket-02 (copied into `docs/notes/phase-N.md`); lab rules: LAB.md, RULES.md.
+3D web game (Three.js) + deterministic headless sim, Test Contract **v1.2** (3 nights, lantern fuel). Requirements: lab board PRD-0 + Ticket-02 + Ticket-03 (copied into `docs/notes/phase-N.md`); lab rules: LAB.md, RULES.md.
 
 ## Commands
 - Install: `npm install` · Play: `npm start` → http://localhost:5173 (`?night=2` start at a night, `?fps` FPS meter)
@@ -15,8 +15,9 @@
 - `tests/*.test.js` node:test; `tests/scenarios/phaseN.json` headless cases (≥1 per feature). `docs/notes/` spec + AI log; `docs/proof/` evidence.
 
 ## Rules
-- Contract output is graded automatically: exact event/field names, shade states `spawning|wander|chase|recoil|stunned`, coords 3 dp, events before same-tick snapshot, `end` last.
+- Contract output is graded automatically: exact event/field names, shade states `spawning|wander|chase|recoil|stunned|drain`, coords 3 dp, events before same-tick snapshot, `end` last.
 - Counters that tick down in step 2 (stun, cooldowns, invuln, charm, TTL) — check off-by-one with a test when adding one.
+- Lantern fuel is an integer in 1/60 units (`fuelU`); decay/drain/out happen in step 2. Use `isSafe`/`capacity`/`litNeeded` helpers, never re-derive. Design record: docs/adr/; breaking changes: CHANGELOG.md.
 - Randomness only through `g.rng`. Visual/creative extras live in `web/` and must not change headless output.
 - New rule or tuning change ⇒ update test + `docs/notes/phase-N.md` in the same commit. A test broken by a new ticket: fix or remove it **with the reason** in notes.
 - Tests derive expectations from tuning/spec; never paste program output as the expected value. Never hand-edit `docs/proof/`.

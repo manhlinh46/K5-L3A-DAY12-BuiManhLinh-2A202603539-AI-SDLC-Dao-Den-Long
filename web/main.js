@@ -1,7 +1,7 @@
 // Renderer, input, audio and game flow for Đảo Đèn Lồng. All rules live in /src/sim (same code as
 // headless); this file turns keyboard/mouse into contract-style input and draws the sim state.
 import * as THREE from 'three';
-import { createGame, step, timeLeft, WORLD, TICK_RATE } from '/src/sim/game.js';
+import { createGame, step, timeLeft, WORLD, TICK_RATE, isSafe, capacity, litNeeded } from '/src/sim/game.js';
 import { MAPS } from '/src/sim/maps.js';
 
 const { tuning: T } = await (await fetch('/game.contract.json')).json();
@@ -15,7 +15,7 @@ const INTRO = {
 };
 
 // ---------- settings (persisted) ----------
-const settings = { volume: 0.7, sens: 1 };
+const settings = { volume: 0.7, sens: 1, colorblind: false };
 try {
   Object.assign(settings, JSON.parse(localStorage.getItem('ddl-settings') || '{}'));
 } catch {}
@@ -24,6 +24,10 @@ const saveSettings = () => {
     localStorage.setItem('ddl-settings', JSON.stringify(settings));
   } catch {}
 };
+
+const isSafeView = (L) => isSafe(g, L);
+const applyPalette = () => document.documentElement.classList.toggle('cb', !!settings.colorblind);
+applyPalette();
 
 // ---------- renderer ----------
 const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
@@ -222,8 +226,20 @@ function makeLantern(L) {
   const ring = new THREE.Mesh(new THREE.RingGeometry(T.safe_radius - 0.12, T.safe_radius, 64), new THREE.MeshBasicMaterial({ color: C.lit, transparent: true, opacity: 0, side: THREE.DoubleSide }));
   ring.rotation.x = -Math.PI / 2;
   ring.position.y = 0.04;
-  g.add(pole, cap, body, light, halo, ring);
-  g.userData = { bodyMat, light, halo, ring };
+  // torn-paper mark shown on unlit lanterns (readable without colour)
+  const tear = new THREE.Mesh(new THREE.PlaneGeometry(0.12, 0.7), new THREE.MeshBasicMaterial({ color: 0x0b0d18, side: THREE.DoubleSide }));
+  tear.position.set(0.18, 3.65, 0.6);
+  tear.rotation.z = 0.5;
+  // fuel bar (billboarded each frame)
+  const bar = new THREE.Group();
+  const barBg = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.18), new THREE.MeshBasicMaterial({ color: 0x1b2350, depthTest: false }));
+  const barFill = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 0.11), new THREE.MeshBasicMaterial({ color: C.gold, depthTest: false }));
+  barFill.position.z = 0.01;
+  bar.add(barBg, barFill);
+  bar.position.y = 5.0;
+  bar.renderOrder = 10;
+  g.add(pole, cap, body, light, halo, ring, tear, bar);
+  g.userData = { bodyMat, body, light, halo, ring, tear, bar, barFill };
   world.add(g);
   return g;
 }
@@ -386,6 +402,7 @@ const SFX = {
   wind: () => noise(1.6, 0.06, 500),
   charm: () => [660, 990].forEach((f, i) => tone(f, 0.3, 'triangle', 0.08, i * 0.08)),
   steal: () => tone(700, 0.4, 'sawtooth', 0.04),
+  out: () => [330, 247].forEach((f, i) => tone(f, 0.5, 'triangle', 0.08, i * 0.15)),
 };
 
 // ---------- input ----------
@@ -430,6 +447,8 @@ function currentInput() {
 const QS = new URLSearchParams(location.search);
 const START_NIGHT = [1, 2, 3].includes(Number(QS.get('night'))) ? Number(QS.get('night')) : 1; // ?night=2 to practise / test a night
 if (QS.has('fps')) document.getElementById('fps').classList.remove('hidden');
+// ?debug exposes the live game for visual checks only (screenshots of fuel bars etc.); never used by headless/tests
+if (QS.has('debug')) window.__ddl = { get g() { return g; } };
 let screen = 'menu';
 let prevScreen = 'menu';
 let g = createGame({ tuning: T, seed: 1, night: 1 });
@@ -466,14 +485,14 @@ function showIntro(night) {
   $('introNight').textContent = `Đêm ${night}`;
   $('introName').textContent = MAPS[night].name;
   $('introQuote').textContent = `"${INTRO[night]}" — Ông Đăng`;
-  $('introGoal').textContent = `Thắp ${MAPS[night].lanterns.length} Đèn Lồng Lớn trong ${Math.round(g.duration / 60 * 10) / 10} phút.`;
+  $('introGoal').textContent = `Giữ ít nhất ${litNeeded(g)}/${MAPS[night].lanterns.length} Đèn Lồng Lớn sáng tới bình minh (${Math.round(g.duration / 60 * 10) / 10} phút). Đèn cạn dầu sẽ tắt — nhớ châm thêm đom đóm!`;
   setScreen('intro');
 }
 function showResult({ result, reason }) {
   const won = result === 'won';
   if (won) campaign.total += g.score;
   (won ? SFX.win : SFX.lose)();
-  const why = { all_lit: 'Mọi Đèn Lồng Lớn đã sáng, sương đen tan dần.', dawn: 'Bình minh đến khi đảo vẫn còn tối.', no_flames: 'Ngọn Lửa của Mây đã tắt.' }[reason];
+  const why = { dawn_survived: `Bình minh! ${g.lanterns.filter((L) => L.lit).length} đèn vẫn sáng, sương đen tan dần.`, dawn: `Bình minh đến nhưng chưa đủ ${litNeeded(g)} đèn sáng.`, no_flames: 'Ngọn Lửa của Mây đã tắt.' }[reason];
   $('resTitle').textContent = won ? `Đêm ${campaign.night} hoàn thành!` : 'Thua rồi...';
   $('resText').textContent = why;
   $('resScore').textContent = won ? `Điểm Đêm: ${g.score} · Tổng: ${campaign.total}` : `Tổng điểm hiện có: ${campaign.total}`;
@@ -506,6 +525,7 @@ const ACTIONS = {
   settings: () => {
     $('setVol').value = settings.volume;
     $('setSens').value = settings.sens;
+    $('setCb').checked = !!settings.colorblind;
     setScreen('settings');
   },
   closeSettings,
@@ -520,6 +540,11 @@ document.addEventListener('click', (e) => {
 $('setVol').addEventListener('input', (e) => {
   settings.volume = Number(e.target.value);
   if (A.master) A.master.gain.value = settings.volume;
+  saveSettings();
+});
+$('setCb').addEventListener('change', (e) => {
+  settings.colorblind = e.target.checked;
+  applyPalette();
   saveSettings();
 });
 $('setSens').addEventListener('input', (e) => {
@@ -538,7 +563,9 @@ function onEvent(e) {
   switch (e.name) {
     case 'mote_picked': SFX.mote(e.data.carried); break;
     case 'deposit': tone(523, 0.2, 'sine', 0.1); break;
-    case 'lantern_lit': SFX.lit(); toast(`Đèn ${e.data.lantern_id} đã sáng!`); break;
+    case 'lantern_lit': SFX.lit(); toast(`Đèn ${e.data.lantern_id} ${e.data.relight ? 'được thắp lại' : 'đã sáng'}!`); break;
+    case 'refuel': tone(587, 0.2, 'sine', 0.09); break;
+    case 'lantern_out': SFX.out(); toast(`Đèn ${e.data.lantern_id} đã cạn dầu và tắt!`); break;
     case 'pulse': SFX.pulse(); pulseAnim = 0; break;
     case 'player_hit': SFX.hit(); flash = 1; if (e.data.by === 'fall') toast('Mây rơi xuống biển mây...'); break;
     case 'dash': SFX.dash(); break;
@@ -551,7 +578,7 @@ function onEvent(e) {
 }
 
 // ---------- HUD ----------
-for (let i = 0; i < T.carry_capacity; i++) $('bar').insertAdjacentHTML('beforeend', '<div class="slot"></div>');
+for (let i = 0; i < T.capacity_max; i++) $('bar').insertAdjacentHTML('beforeend', '<div class="slot"></div>');
 const slots = [...document.querySelectorAll('.slot')];
 const v3 = new THREE.Vector3();
 function updateHud() {
@@ -560,20 +587,26 @@ function updateHud() {
   const s = Math.ceil(timeLeft(g));
   $('timer').textContent = `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
   $('timer').classList.toggle('danger', s <= 30);
+  if (s <= 30 && settings.colorblind) $('timer').textContent = `⚠ ${$('timer').textContent}`;
   const lit = g.lanterns.filter((L) => L.lit).length;
-  $('lit').textContent = `${lit}/${g.lanterns.length}`;
+  $('lit').textContent = `${lit}/${g.lanterns.length} (cần ${litNeeded(g)})`;
   $('score').textContent = campaign.total + g.score;
   $('nightName').textContent = `Đêm ${g.night} · ${MAPS[g.night].name}`;
-  slots.forEach((el, i) => el.classList.toggle('on', i < p.carried));
+  const cap = capacity(g);
+  slots.forEach((el, i) => {
+    el.classList.toggle('on', i < p.carried);
+    el.classList.toggle('hidden', i >= cap);
+  });
+  $('carryText').textContent = `${p.carried}/${cap}`;
   const dashFrac = p.charm > 0 ? 1 : 1 - p.dashCd / Math.round(T.dash_cooldown_s * TICK_RATE);
   $('cdDash').style.setProperty('--p', dashFrac);
   $('cdDash').classList.toggle('charm', p.charm > 0);
   $('cdPulse').style.setProperty('--p', p.carried < T.pulse_cost ? 0 : 1 - p.pulseCd / Math.round(T.pulse_cooldown_s * TICK_RATE));
   $('charmTag').classList.toggle('hidden', p.charm === 0);
   $('charmTag').textContent = `Bùa Gió ${Math.ceil(p.charm / 60)}s`;
-  const near = g.lanterns.find((L) => !L.lit && Math.hypot(L.pos[0] - p.pos[0], L.pos[2] - p.pos[2]) <= T.interact_radius);
+  const near = g.lanterns.find((L) => (!L.lit || L.fuelU < T.fuel_max * 60 - 60) && Math.hypot(L.pos[0] - p.pos[0], L.pos[2] - p.pos[2]) <= T.interact_radius);
   $('hint').classList.toggle('hidden', !near);
-  if (near) $('hint').textContent = `E — Nạp ánh sáng (${near.deposited}/${T.lantern_cost})`;
+  if (near) $('hint').textContent = near.lit ? `E — Châm dầu (${Math.floor(near.fuelU / 60)}/${T.fuel_max})` : `E — Nạp ánh sáng (${near.deposited}/${near.everLit ? T.relight_cost : T.lantern_cost})`;
   // arrow to the nearest unlit lantern when it is off-screen
   let best = null;
   let bd = Infinity;
@@ -648,20 +681,33 @@ function draw(dt) {
   playerMesh.position.set(...p.pos);
   playerMesh.rotation.y = Math.atan2(p.facing[0], p.facing[1]);
   playerMesh.visible = !p.waiting && (p.invuln === 0 || Math.floor(clock * 12) % 2 === 0);
-  const cf = p.carried / T.carry_capacity; // creative: hat lantern glows with carried light
+  const cf = p.carried / capacity(g); // creative: hat lantern glows with carried light
   playerMesh.userData.light.intensity = 3 + cf * 14;
   playerMesh.userData.halo.scale.setScalar(1 + cf * 1.6);
 
   syncMap(lanternMeshes, g.lanterns, makeLantern, (m, L) => {
     m.position.set(...L.pos);
     const u = m.userData;
-    const frac = L.lit ? 1 : L.deposited / T.lantern_cost;
+    const cost = L.everLit ? T.relight_cost : T.lantern_cost;
+    const frac = L.lit ? 1 : L.deposited / cost;
+    const fuel = L.fuelU / 60;
+    const low = L.lit && fuel < T.low_fuel_threshold;
+    const blinkOff = low && Math.floor(clock * 2) % 2 === 1; // slow 1 Hz blink when fuel < 30
+    const k = blinkOff ? 0.25 : 1;
     u.bodyMat.color.setHex(L.lit ? C.lit : C.off);
     u.bodyMat.emissive.setHex(L.lit ? C.core : C.lit);
-    u.bodyMat.emissiveIntensity = L.lit ? 1.6 + Math.sin(clock * 3 + L.pos[0]) * 0.15 : frac * 0.6;
-    u.light.intensity = L.lit ? 60 : frac * 6;
-    u.halo.material.opacity = L.lit ? 0.9 : frac * 0.4;
-    u.ring.material.opacity = L.lit ? 0.35 : 0;
+    u.bodyMat.emissiveIntensity = (L.lit ? 1.6 + Math.sin(clock * 3 + L.pos[0]) * 0.15 : frac * 0.6) * k;
+    u.light.intensity = (L.lit ? 15 + 45 * Math.min(1, fuel / 50) : frac * 6) * k;
+    u.halo.material.opacity = (L.lit ? 0.9 : frac * 0.4) * k;
+    u.ring.material.opacity = isSafeView(L) ? 0.35 : 0; // safe zone only when lit with fuel >= 30
+    u.body.scale.set(L.lit ? 1 : 0.95, L.lit ? 1.25 : 1.25 * 0.8, L.lit ? 1 : 0.95); // unlit: squashed 20 %
+    u.body.position.y = L.lit ? 3.65 : 3.5;
+    u.tear.visible = !L.lit;
+    u.bar.visible = L.lit && !blinkOff;
+    u.barFill.scale.x = Math.max(0.001, fuel / T.fuel_max);
+    u.barFill.position.x = -0.75 * (1 - fuel / T.fuel_max);
+    u.barFill.material.color.setHex(low ? (settings.colorblind ? 0xffffff : 0xff5a5f) : C.gold);
+    u.bar.quaternion.copy(camera.quaternion);
   });
   syncMap(moteMeshes, g.motes, makeMote, (m, mo) => {
     const h = Number(mo.id.slice(1)) * 1.7;
@@ -674,8 +720,10 @@ function draw(dt) {
     m.position.set(s.pos[0], s.pos[1] + 0.3 + Math.sin(clock * 2.5 + s.pos[0]) * 0.15, s.pos[2]);
     m.lookAt(p.pos[0], m.position.y, p.pos[2]);
     m.userData.bodyMat.color.setHex(stunned ? C.stunned : C.shade);
-    m.userData.rimMat.color.setHex(stunned ? C.stunned : C.rim);
-    m.userData.eyeMat.color.setHex(stunned ? 0x777788 : 0xd8b4ff);
+    const rim = settings.colorblind ? 0x00b3ff : C.rim; // colour-blind palette: #7A3CFF -> #00B3FF
+    m.userData.rimMat.color.setHex(stunned ? C.stunned : rim);
+    m.userData.eyeMat.color.setHex(stunned ? 0x777788 : settings.colorblind ? 0x00b3ff : 0xd8b4ff);
+    m.userData.bodyMat.emissive?.setHex(s.state === 'drain' ? 0x2a1150 : 0x000000);
     m.scale.setScalar(s.state === 'spawning' ? 0.4 : s.state === 'recoil' ? 0.9 : 1);
     m.rotation.z = stunned ? Math.sin(clock * 10) * 0.25 : 0;
   });
