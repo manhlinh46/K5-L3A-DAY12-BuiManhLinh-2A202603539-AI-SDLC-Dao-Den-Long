@@ -1,0 +1,15 @@
+{
+  "random_motes": false,
+  "motes": [],
+  "lanterns": [
+    {
+      "id": "L1",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "lit": true
+    }
+  ]
+}
