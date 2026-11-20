@@ -1,0 +1,79 @@
+[
+  {
+    "name": "core_loop_pickup_deposit_light",
+    "requirement": "Nhặt đom đóm, mang về nạp và thắp đèn (PRD-0 §2)",
+    "seed": 1, "ticks": 300,
+    "scenario": { "random_motes": false, "random_shades": false, "shades": [], "motes": [[0,0,2],[0,0,4],[0,0,6],[0,0,8],[0,0,10]] },
+    "inputs": { "frames": [ { "tick": 0, "move": [0, 1] }, { "tick": 230, "move": [0, 0], "interact": true }, { "tick": 231, "interact": false } ] },
+    "expect": {
+      "events": [
+        { "name": "mote_picked", "data": { "carried": 1 } },
+        { "name": "mote_picked", "data": { "carried": 5 } },
+        { "name": "deposit", "data": { "lantern_id": "L1", "amount": 5, "deposited": 5 }, "tick": 231 },
+        { "name": "lantern_lit", "data": { "lantern_id": "L1" }, "tick": 231 }
+      ],
+      "end": { "state": "playing", "score": 150 }
+    }
+  },
+  {
+    "name": "pulse_stuns_shade",
+    "requirement": "Tỏa sáng xua Bóng Mực, tốn ánh sáng (PRD-0 §1-2)",
+    "seed": 1, "ticks": 180,
+    "scenario": { "random_motes": false, "random_shades": false, "motes": [], "player": { "carried": 2 }, "shades": [ { "id": "S1", "pos": [6, 0, 0] } ] },
+    "inputs": { "frames": [ { "tick": 0, "pulse": true }, { "tick": 1, "pulse": false } ] },
+    "expect": {
+      "events": [ { "name": "pulse", "data": { "stunned_ids": ["S1"] }, "tick": 1 } ],
+      "no_events": ["player_hit"],
+      "end": { "state": "playing", "score": 20 }
+    }
+  },
+  {
+    "name": "shade_hits_until_lost",
+    "requirement": "Bị Bóng Mực chạm mất máu; hết máu thì thua (PRD-0 §1)",
+    "seed": 1, "ticks": 600,
+    "scenario": { "random_motes": false, "random_shades": false, "motes": [], "player": { "flames": 2, "carried": 4 }, "shades": [ { "id": "S1", "pos": [3, 0, 0] } ] },
+    "expect": {
+      "events": [
+        { "name": "player_hit", "data": { "by": "shade", "flames": 1, "dropped": 2 } },
+        { "name": "player_hit", "data": { "by": "shade", "flames": 0, "dropped": 1 } },
+        { "name": "game_over", "data": { "result": "lost", "reason": "no_flames" } }
+      ],
+      "end": { "state": "lost" }
+    }
+  },
+  {
+    "name": "dawn_ends_night",
+    "requirement": "Hết thời lượng Đêm thì thua (giả định A6)",
+    "seed": 1, "ticks": 1000,
+    "scenario": { "random_motes": false, "random_shades": false, "motes": [], "shades": [], "time_left_s": 2 },
+    "expect": {
+      "events": [ { "name": "game_over", "data": { "result": "lost", "reason": "dawn" }, "tick": 120 } ],
+      "end": { "state": "lost", "ticks": 120 }
+    }
+  },
+  {
+    "name": "light_last_lantern_wins",
+    "requirement": "Thắp hết đèn thì thắng, có điểm (PRD-0 §1)",
+    "seed": 1, "ticks": 60,
+    "scenario": { "random_motes": false, "random_shades": false, "motes": [], "shades": [], "player": { "carried": 5 }, "time_left_s": 100,
+      "lanterns": [ { "id": "L1", "pos": [0, 0, 2] }, { "id": "L2", "lit": true }, { "id": "L3", "lit": true }, { "id": "L4", "lit": true }, { "id": "L5", "lit": true } ] },
+    "inputs": { "frames": [ { "tick": 0, "interact": true } ] },
+    "expect": {
+      "events": [ { "name": "lantern_lit", "data": { "lantern_id": "L1" }, "tick": 1 }, { "name": "game_over", "data": { "result": "won", "reason": "all_lit" }, "tick": 1 } ],
+      "end": { "state": "won", "ticks": 1, "score": 448 }
+    }
+  },
+  {
+    "name": "lantern_safe_zone",
+    "requirement": "Bóng Mực sợ đèn: không vào safe_radius (PRD-0 §1)",
+    "seed": 1, "ticks": 1200,
+    "scenario": { "random_motes": false, "random_shades": false, "motes": [], "lanterns": [ { "id": "L1", "pos": [0, 0, 0] } ], "shades": [ { "id": "S1", "pos": [15, 0, 0] }, { "id": "S2", "pos": [-12, 0, 5] } ] },
+    "expect": { "no_events": ["player_hit"], "end": { "state": "playing" } }
+  },
+  {
+    "name": "default_night_standing_still",
+    "requirement": "Màn mặc định: đom đóm + Bóng Mực tự sinh, chạy tới kết thúc",
+    "seed": 2026, "ticks": 18000,
+    "expect": { "events": [ { "name": "player_hit" }, { "name": "game_over", "data": { "result": "lost", "reason": "no_flames" } } ], "end": { "state": "lost" } }
+  }
+]
