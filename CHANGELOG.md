@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.0.0 / phase-4] — Ticket-04 "Bình minh: phát hành v1.0.0" · Test Contract v1.3
+
+### Added
+- **Benchmark** `node scripts/bench.js --seed 42 --duration 30 --out bench.json`: Chromium 1280×720 via puppeteer with vsync off; standard scene with 200 wandering shades, 100 motes and L1–L3 lit; orbit camera; reports avg_fps, p1_low_fps, frame_ms_p95, frames, load_ms and peak_mem_mb (RSS of the browser process tree).
+- **Soak** `scripts/soak.js`: 10 nights in one process with seeded random input; reports crashes and RSS start/end.
+- **Local leaderboard:** top 10 on disk (`data/leaderboard.json`), screen in the main menu, name entry after Dawn or a loss (3–12 characters, Vietnamese accepted), `node server.js --export-leaderboard out.json`. The static build falls back to localStorage.
+- **Accessibility:** rebind every action (duplicate detection, reset to defaults, saved); captions for shade spawn (with an edge arrow), incoming wind, last 10 s and low fuel; reduced motion (no camera shake or screen flash); UI text ≥ 18 px; large text ×1.25.
+- Static web release (`npm run build:web`), retro, Phase 4 notes and proof.
+
+### Changed
+- Shades and motes render with `InstancedMesh` / `Points` (bench on the dev machine: avg 75 → 633 FPS, p1 low 3 → 378). Render only; headless output is unchanged.
+- `game.contract.json`: `contract_version` "1.3", new `bench_cmd` and `soak_cmd`. `run_cmd` is now `node server.js` so that `--export-leaderboard` can be passed directly (`npm start` still works).
+- Sim: optional `bench` flag in `createGame`. It is never set by the headless CLI, so contract outputs are identical.
+- `server.js` exports `startServer()` and serves the `/api/leaderboard` endpoints. It prints a clear message when the port is in use.
+
+### Breaking changes
+- None for the headless contract (v1.0–v1.2 behaviour kept). `run_cmd` changed from `npm start` to `node server.js` (same server).
+
 ## [phase-3] — Ticket-03 "Đèn cạn dầu" · Test Contract v1.2
 
 ### ⚠ Breaking changes
