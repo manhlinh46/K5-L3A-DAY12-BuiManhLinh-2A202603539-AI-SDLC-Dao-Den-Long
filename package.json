@@ -1,18 +1,24 @@
 {
   "name": "dao-den-long",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Đảo Đèn Lồng — game 3D (Three.js) + headless sim theo Test Contract v1.0",
   "type": "module",
   "private": true,
   "license": "MIT",
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "start": "node server.js",
     "headless": "node src/headless.js",
     "test": "node scripts/run-tests.js",
-    "proof": "node scripts/proof.js"
+    "proof": "node scripts/proof.js",
+    "bench": "node scripts/bench.js --seed 42 --duration 30 --out bench.json",
+    "soak": "node --expose-gc --max-semi-space-size=1 --single-threaded scripts/soak.js --seed 7 --nights 10 --out soak.json",
+    "build:web": "node scripts/build-web.js"
   },
   "dependencies": {
+    "puppeteer": "23.11.1",
     "three": "0.170.0"
   }
 }

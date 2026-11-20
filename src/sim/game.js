@@ -123,7 +123,7 @@ const emptyMotePoints = (g) => g.M.moteSpawns.filter((pt) => !g.motes.some((m) =
  * Build the initial state of one night. Applying a scenario never emits events or awards score.
  * @param {{tuning: object, seed?: number, night?: 1|2|3, scenario?: object|null}} opts
  */
-export function createGame({ tuning, seed = 1, night = 1, scenario = null }) {
+export function createGame({ tuning, seed = 1, night = 1, scenario = null, bench = false }) {
   const T = tuning;
   const M = MAPS[night];
   const sc = scenario || {};
@@ -159,6 +159,8 @@ export function createGame({ tuning, seed = 1, night = 1, scenario = null }) {
     windEnabled: M.wind && sc.wind_enabled !== false,
     wind: { active: false, dir: 0 },
     prev: { jump: false, interact: false, pulse: false, dash: false, pause: false },
+    // Ticket-04 benchmark scene: no spawns, damage, pickup, fuel decay or night end; shades only wander
+    bench,
   };
   const p = g.player;
 
@@ -428,7 +430,7 @@ export function step(g, inp) {
   g.motes = g.motes.filter((m) => m.ttl === null || --m.ttl > 0);
   // Ticket-03 step 2: fuel decay (1/s) + drain (5/s per draining shade); right after, empty lanterns go out
   for (const L of g.lanterns) {
-    if (!L.lit) continue;
+    if (!L.lit || g.bench) continue;
     const drainers = g.shades.filter((s) => s.state === 'drain' && s.target === L.id).sort(byId);
     L.fuelU -= Math.round(T.fuel_decay_per_s) + Math.round(T.drain_per_s) * drainers.length;
     for (const s of drainers) {
@@ -455,7 +457,7 @@ export function step(g, inp) {
 
   // 4. pickup motes and charms
   const reach = (pos) => distXZ(p.pos, pos) <= T.pickup_radius && Math.abs(p.pos[1] - pos[1]) <= W.pickupHeight;
-  if (active) {
+  if (active && !g.bench) {
     for (let i = 0; i < g.motes.length && p.carried < capacity(g); ) {
       if (reach(g.motes[i].pos)) {
         g.motes.splice(i, 1);
@@ -588,7 +590,7 @@ export function step(g, inp) {
         s.state = 'wander';
         s.target = null;
       } else continue; // stand still and drain (fuel is taken in step 2)
-    } else if (s.state === 'wander' && !fromStun && active && d <= W.shadeDetect) s.state = 'chase';
+    } else if (s.state === 'wander' && !fromStun && !g.bench && active && d <= W.shadeDetect) s.state = 'chase';
     else if (s.state === 'chase' && (!active || d > W.shadeGiveUp)) s.state = 'wander';
     if (s.state === 'chase') {
       if (d > 1e-9) moveEntity(g, s, away(s.pos, p.pos), Math.min(shadeSpeed * DT, d), W.shadeHover, true);
@@ -633,7 +635,7 @@ export function step(g, inp) {
   g.drifters = g.drifters.filter((d) => d.state !== 'removed');
 
   // 9. contacts: drifters steal first, then shades hit (ascending id)
-  if (active) {
+  if (active && !g.bench) {
     for (const d of [...g.drifters].sort(byId)) {
       if (d.state !== 'chase' || p.carried === 0 || distXZ(d.pos, p.pos) > W.drifterHit) continue;
       const amount = Math.min(W.drifterSteal, p.carried);
@@ -656,6 +658,7 @@ export function step(g, inp) {
   }
 
   // 10. scheduled spawns (new entities interact from the next tick)
+  if (g.bench) return finish();
   if (g.randomMotes && g.steps % W.moteSpawnEvery === 0 && g.motes.length < W.moteCap) {
     const pts = emptyMotePoints(g);
     if (pts.length) newMote(g, [...pts[Math.floor(g.rng() * pts.length)]]);
@@ -724,4 +727,14 @@ export function snapshot(g) {
     drifters: g.drifters.map((d) => ({ id: d.id, pos: d.pos.map(r3), state: d.state, stolen: d.stolen })),
     charms: g.charms.map((c) => ({ id: c.id, pos: c.pos.map(r3), available: c.available, respawn_s: r3(c.respawn / TICK_RATE) })),
   };
+}
+
+/** Add a shade (used by the benchmark scene, which needs exactly 200 wandering shades). */
+export function addShade(g, x, z, state = 'wander') {
+  const s = makeShade(g, newShadeId(g), x, z, state);
+  g.shades.push(s);
+  return s;
+}
+export function addMote(g, pos) {
+  return newMote(g, pos);
 }

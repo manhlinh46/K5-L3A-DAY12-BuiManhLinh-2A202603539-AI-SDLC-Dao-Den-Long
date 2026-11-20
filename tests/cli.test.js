@@ -23,7 +23,8 @@ const readLines = (p) => readFileSync(p, 'utf8').trim().split('\n').map((l) => J
 
 test('contract file declares all required fields and tuning keys', () => {
   for (const k of ['contract_version', 'team', 'build_cmd', 'run_cmd', 'headless_cmd', 'tuning']) assert.ok(k in contract, k);
-  assert.equal(contract.contract_version, '1.2');
+  assert.equal(contract.contract_version, '1.3');
+  for (const k of ['bench_cmd', 'soak_cmd']) assert.equal(typeof contract[k], 'string', k);
   // Ticket-02 Part 1 standard numbers, updated by Ticket-03 (durations, fuel keys, scores)
   const standard = {
     player_speed: 6, carry_capacity: 10, lantern_cost: 10, lantern_count_night1: 5, pickup_radius: 1, interact_radius: 2,

@@ -7,53 +7,69 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='6' fill='%23ffb347'/%3E%3C/svg%3E" />
   <style>
     /* Ticket-02 standard palette */
-    :root { --sky:#0E1430; --fog:#1B2350; --lit:#FFB347; --core:#FFE9B0; --off:#5B5F6E; --gold:#F2C14E; --danger:#FF5A5F; --text:#F5F1E6; --scarf:#C8102E; --drifter:#8FA3B8; --panel: rgba(14,20,48,.82); }
+    :root { --fs: 1; --sky:#0E1430; --fog:#1B2350; --lit:#FFB347; --core:#FFE9B0; --off:#5B5F6E; --gold:#F2C14E; --danger:#FF5A5F; --text:#F5F1E6; --scarf:#C8102E; --drifter:#8FA3B8; --panel: rgba(14,20,48,.82); }
     /* colour-blind friendly palette (Ticket-03 §6) */
     :root.cb { --danger:#FFFFFF; }
+    :root.big { --fs: 1.25; }
     html, body { margin: 0; height: 100%; overflow: hidden; background: var(--sky); font-family: system-ui, "Segoe UI", sans-serif; color: var(--text); user-select: none; }
+    body, button, input, label, td, th, p, h2 { font-size: calc(18px * var(--fs)); } /* Ticket-04: UI text >= 18 px at 1280x720 */
     canvas { display: block; }
     .hud { position: fixed; pointer-events: none; }
     .hidden { display: none !important; }
     #flames { top: 14px; left: 16px; display: flex; gap: 8px; }
     .flame { width: 22px; height: 30px; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; background: radial-gradient(circle at 50% 70%, var(--core), var(--lit) 55%, #c86a1a); box-shadow: 0 0 14px rgba(255,179,71,.7); }
     .flame.out { background: var(--off); box-shadow: none; opacity: .5; }
-    #timer { top: 10px; left: 50%; transform: translateX(-50%); font-size: 30px; font-weight: 700; letter-spacing: 1px; text-shadow: 0 2px 8px rgba(0,0,0,.6); }
+    #timer { top: 10px; left: 50%; transform: translateX(-50%); font-size: calc(30px * var(--fs)); font-weight: 700; letter-spacing: 1px; text-shadow: 0 2px 8px rgba(0,0,0,.6); }
     #timer.danger { color: var(--danger); animation: blink .6s steps(2, start) infinite; }
     @keyframes blink { to { visibility: hidden; } }
-    #topright { top: 14px; right: 16px; text-align: right; font-size: 18px; line-height: 1.5; text-shadow: 0 2px 6px rgba(0,0,0,.6); }
+    #topright { top: 14px; right: 16px; text-align: right; font-size: calc(18px * var(--fs)); line-height: 1.5; text-shadow: 0 2px 6px rgba(0,0,0,.6); }
     #topright b { color: var(--gold); }
-    #nightName { font-size: 13px; opacity: .75; }
+    #nightName { font-size: calc(18px * var(--fs)); opacity: .75; }
     #bar { bottom: 18px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; }
     .slot { width: 22px; height: 22px; border-radius: 50%; border: 2px solid rgba(242,193,78,.55); background: rgba(14,20,48,.6); }
     .slot.on { background: radial-gradient(circle, #FFF6C2 30%, #FFE58A 70%); box-shadow: 0 0 10px #FFE58A; border-color: var(--gold); }
-    #carryText { bottom: 21px; left: calc(50% + 290px); font-size: 15px; color: var(--gold); }
+    #carryText { bottom: 18px; left: calc(50% + 250px * var(--fs)); font-size: calc(18px * var(--fs)); color: var(--gold); }
     .slot { width: 18px !important; height: 18px !important; }
-    #hint { bottom: 52px; left: 50%; transform: translateX(-50%); font-size: 16px; padding: 5px 14px; border-radius: 8px; background: var(--panel); border: 1px solid rgba(242,193,78,.5); }
+    #captions { left: 16px; bottom: 110px; display: flex; flex-direction: column; gap: 6px; max-width: 420px; }
+    .cap { background: rgba(0,0,0,.72); color: var(--text); padding: 4px 12px; border-radius: 6px; font-size: calc(18px * var(--fs)); }
+    .cap.warn::before { content: '⚠ '; color: var(--danger); }
+    #shadeArrow { width: 0; height: 0; border-left: 13px solid transparent; border-right: 13px solid transparent; border-bottom: 26px solid #7A3CFF; filter: drop-shadow(0 0 6px #7A3CFF); }
+    :root.cb #shadeArrow { border-bottom-color: #00B3FF; filter: drop-shadow(0 0 6px #00B3FF); }
+    .board { width: 100%; border-collapse: collapse; margin: 10px 0; }
+    .board td, .board th { padding: 4px 8px; border-bottom: 1px solid rgba(245,241,230,.15); text-align: left; }
+    .board td.num, .board th.num { text-align: right; }
+    input[type=text] { font-size: calc(18px * var(--fs)); padding: 6px 10px; border-radius: 8px; border: 1px solid rgba(242,193,78,.6); background: #0b1028; color: var(--text); width: 220px; }
+    .msg { min-height: 1.4em; color: var(--core); }
+    .keyrow { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 4px 0; }
+    .keyrow button { min-width: 120px; padding: 4px 10px; font-size: calc(18px * var(--fs)); }
+    .keyrow button.waiting { background: var(--danger); }
+    .scroll { max-height: 60vh; overflow-y: auto; padding-right: 6px; }
+    #hint { bottom: 52px; left: 50%; transform: translateX(-50%); font-size: calc(18px * var(--fs)); padding: 5px 14px; border-radius: 8px; background: var(--panel); border: 1px solid rgba(242,193,78,.5); }
     #cds { bottom: 14px; right: 16px; display: flex; gap: 12px; }
-    .cd { position: relative; width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; text-align: center; line-height: 1.1;
+    .cd { position: relative; width: calc(76px * var(--fs)); height: calc(76px * var(--fs)); border-radius: 50%; display: grid; place-items: center; font-size: calc(18px * var(--fs)); text-align: center; line-height: 1.1;
           background: conic-gradient(var(--gold) calc(var(--p, 1) * 360deg), rgba(91,95,110,.6) 0); }
-    .cd span { width: 44px; height: 44px; border-radius: 50%; background: var(--sky); display: grid; place-items: center; }
+    .cd span { width: calc(64px * var(--fs)); height: calc(64px * var(--fs)); border-radius: 50%; background: var(--sky); display: grid; place-items: center; }
     .cd.charm { box-shadow: 0 0 12px var(--scarf); }
-    #charmTag { bottom: 76px; right: 16px; font-size: 13px; color: #ffb3b8; }
+    #charmTag { bottom: 76px; right: 16px; font-size: calc(18px * var(--fs)); color: #ffb3b8; }
     #arrow { width: 0; height: 0; border-left: 14px solid transparent; border-right: 14px solid transparent; border-bottom: 28px solid var(--lit); filter: drop-shadow(0 0 6px var(--lit)); transform-origin: 50% 50%; }
-    #toast { top: 60px; left: 50%; transform: translateX(-50%); font-size: 19px; color: var(--gold); text-shadow: 0 0 12px rgba(255,179,71,.8); opacity: 0; transition: opacity .3s; }
-    #windWarn { top: 96px; left: 50%; transform: translateX(-50%); color: #cfe3ff; font-size: 15px; }
-    #fps { bottom: 4px; left: 6px; font: 12px monospace; opacity: .8; }
+    #toast { top: 60px; left: 50%; transform: translateX(-50%); font-size: calc(19px * var(--fs)); color: var(--gold); text-shadow: 0 0 12px rgba(255,179,71,.8); opacity: 0; transition: opacity .3s; }
+    #windWarn { top: 96px; left: 50%; transform: translateX(-50%); color: #cfe3ff; font-size: calc(18px * var(--fs)); }
+    #fps { bottom: 4px; left: 6px; font: calc(18px * var(--fs)) monospace; opacity: .8; }
     #flash { inset: 0; background: rgba(122,60,255,.0); transition: background .15s; }
     .overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(14,20,48,.62); }
     .card { max-width: 480px; margin: 16px; padding: 26px 30px; text-align: center; background: var(--panel); border: 1px solid rgba(242,193,78,.45); border-radius: 18px; box-shadow: 0 0 60px rgba(255,179,71,.15); }
-    .card h1 { margin: 0 0 6px; color: var(--gold); font-size: 30px; }
-    .card h2 { margin: 0 0 4px; color: var(--lit); font-size: 16px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; }
+    .card h1 { margin: 0 0 6px; color: var(--gold); font-size: calc(30px * var(--fs)); }
+    .card h2 { margin: 0 0 4px; color: var(--lit); font-size: calc(18px * var(--fs)); font-weight: 600; letter-spacing: 2px; text-transform: uppercase; }
     .card p { line-height: 1.55; margin: 8px 0; }
     .quote { font-style: italic; color: var(--core); }
-    .keys { text-align: left; font-size: 14px; display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; margin: 14px 0; }
+    .keys { text-align: left; font-size: calc(18px * var(--fs)); display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; margin: 14px 0; }
     .keys kbd { background: #2a3366; border-radius: 5px; padding: 1px 7px; font-family: inherit; }
     .btns { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; align-items: center; }
-    button { font-size: 16px; padding: 9px 24px; min-width: 200px; border: 0; border-radius: 999px; background: var(--gold); color: var(--sky); font-weight: 700; cursor: pointer; }
+    button { font-size: calc(18px * var(--fs)); padding: 9px 24px; min-width: 200px; border: 0; border-radius: 999px; background: var(--gold); color: var(--sky); font-weight: 700; cursor: pointer; }
     button.ghost { background: transparent; color: var(--text); border: 1px solid rgba(245,241,230,.4); }
     label { display: flex; justify-content: space-between; gap: 14px; align-items: center; margin: 10px 0; }
     input[type=range] { width: 200px; accent-color: var(--gold); }
-    .score { color: var(--gold); font-size: 24px; font-weight: 700; }
+    .score { color: var(--gold); font-size: calc(24px * var(--fs)); font-weight: 700; }
   </style>
   <script type="importmap">{ "imports": { "three": "/node_modules/three/build/three.module.js" } }</script>
 </head>
@@ -73,6 +89,8 @@
     </div>
     <div id="arrow" class="hud hidden"></div>
     <div id="toast" class="hud"></div>
+    <div id="captions" class="hud"></div>
+    <div id="shadeArrow" class="hud hidden"></div>
     <div id="windWarn" class="hud hidden">Gió sắp nổi...</div>
   </div>
   <div id="fps" class="hud hidden"></div>
@@ -90,18 +108,25 @@
         <kbd>Q</kbd><span>Tỏa Sáng (3 đom đóm)</span>
         <kbd>Esc / P</kbd><span>Tạm dừng</span>
       </div>
-      <div class="btns"><button data-act="start">Bắt đầu (Enter)</button><button class="ghost" data-act="settings">Cài đặt</button></div>
+      <div class="btns"><button data-act="start">Bắt đầu (Enter)</button><button class="ghost" data-act="board">Bảng xếp hạng</button><button class="ghost" data-act="settings">Cài đặt</button></div>
     </div>
   </div>
   <div id="ovIntro" class="overlay hidden"><div class="card"><h2 id="introNight"></h2><h1 id="introName"></h1><p class="quote" id="introQuote"></p><p id="introGoal"></p><div class="btns"><button data-act="play">Vào Đêm (Enter)</button></div></div></div>
-  <div id="ovResult" class="overlay hidden"><div class="card"><h1 id="resTitle"></h1><p id="resText"></p><p class="score" id="resScore"></p><div class="btns" id="resBtns"></div></div></div>
+  <div id="ovResult" class="overlay hidden"><div class="card"><h1 id="resTitle"></h1><p id="resText"></p><p class="score" id="resScore"></p><div id="resSave"></div><div class="btns" id="resBtns"></div></div></div>
   <div id="ovPause" class="overlay hidden"><div class="card"><h1>Tạm dừng</h1><div class="btns"><button data-act="resume">Tiếp tục</button><button class="ghost" data-act="restart">Chơi lại Đêm</button><button class="ghost" data-act="settings">Cài đặt</button><button class="ghost" data-act="menu">Về menu</button></div></div></div>
-  <div id="ovSettings" class="overlay hidden"><div class="card"><h1>Cài đặt</h1>
+  <div id="ovSettings" class="overlay hidden"><div class="card"><h1>Cài đặt</h1><div class="scroll">
     <label>Âm lượng <input type="range" id="setVol" min="0" max="1" step="0.05" /></label>
     <label>Độ nhạy chuột <input type="range" id="setSens" min="0.2" max="2.5" step="0.05" /></label>
     <label>Bảng màu dễ phân biệt <input type="checkbox" id="setCb" /></label>
-    <div class="btns"><button data-act="closeSettings">Xong</button></div></div></div>
-  <div id="ovDawn" class="overlay hidden"><div class="card"><h2>Bình Minh</h2><h1>Ba hòn đảo đã sáng!</h1><p class="quote">"Giỏi lắm, Mây. Nắng sớm đã về trên biển mây." — Ông Đăng</p><p>Tổng điểm</p><p class="score" id="dawnScore"></p><div class="btns"><button data-act="menu">Về menu</button></div></div></div>
+    <label>Giảm chuyển động (tắt rung, chớp màn hình) <input type="checkbox" id="setRm" /></label>
+    <label>Chữ lớn (×1.25) <input type="checkbox" id="setBig" /></label>
+    <h2>Phím điều khiển</h2>
+    <div id="keyList"></div>
+    <p class="msg" id="keyMsg"></p>
+    <div class="btns"><button class="ghost" data-act="resetKeys">Khôi phục mặc định</button></div>
+    </div><div class="btns"><button data-act="closeSettings">Xong</button></div></div></div>
+  <div id="ovDawn" class="overlay hidden"><div class="card"><h2>Bình Minh</h2><h1>Ba hòn đảo đã sáng!</h1><p class="quote">"Giỏi lắm, Mây. Nắng sớm đã về trên biển mây." — Ông Đăng</p><p>Tổng điểm</p><p class="score" id="dawnScore"></p><div id="dawnSave"></div><div class="btns"><button data-act="menu">Về menu</button></div></div></div>
+  <div id="ovBoard" class="overlay hidden"><div class="card"><h1>Bảng xếp hạng</h1><div id="boardBody"></div><div class="btns"><button data-act="menu">Về menu</button></div></div></div>
   <script type="module" src="/web/main.js"></script>
 </body>
 </html>

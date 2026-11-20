@@ -4,3 +4,7 @@ node_modules/
 /out/
 .playwright-mcp/
 /*.jsonl
+/data/
+/dist/
+/bench.json
+/soak.json
