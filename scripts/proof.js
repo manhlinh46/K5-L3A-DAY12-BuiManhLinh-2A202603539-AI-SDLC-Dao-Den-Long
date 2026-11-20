@@ -46,6 +46,20 @@ const detPass = det[0] === det[1];
 allPass &&= detPass;
 md.push('', '## Determinism', '', 'Command (run twice): `node src/headless.js --seed 777 --night 1 --ticks 18000 --out runs/det-{a,b}.jsonl`', '', `- det-a sha256: \`${det[0]}\``, `- det-b sha256: \`${det[1]}\``, `- Result: **${detPass ? 'PASS (identical)' : 'FAIL (differ)'}**`);
 
+// 2b. Performance: a full night (21,600 ticks) per night through the CLI, limit 30 s (Contract v1.1)
+md.push('', '## Headless performance (full night, 21,600 ticks, limit 30 s)', '', '| Night | Wall time | Result |', '|---|---|---|');
+for (const night of [1, 2, 3]) {
+  const scen = join(runsDir, `perf-n${night}.scenario.json`);
+  writeFileSync(scen, JSON.stringify({ player: { invuln_ticks: 1000000 } })); // survive the whole night
+  const t0 = performance.now();
+  const r = spawnSync('node', ['src/headless.js', '--seed', '1', '--night', String(night), '--ticks', '21600', '--scenario', scen, '--out', join(runsDir, `perf-n${night}.jsonl`)], { cwd: ROOT });
+  const ms = performance.now() - t0;
+  const ok = r.status === 0 && ms <= 30000;
+  allPass &&= ok;
+  const end = readFileSync(join(runsDir, `perf-n${night}.jsonl`), 'utf8').trim().split('\n').at(-1);
+  md.push(`| ${night} | ${(ms / 1000).toFixed(2)} s | ${ok ? 'PASS' : 'FAIL'} · end=\`${end}\` |`);
+}
+
 // 3. Unit/CLI tests
 const t = spawnSync('npm test', { cwd: ROOT, encoding: 'utf8', shell: true });
 const testOut = (t.stdout + t.stderr).replace(/\r/g, '');

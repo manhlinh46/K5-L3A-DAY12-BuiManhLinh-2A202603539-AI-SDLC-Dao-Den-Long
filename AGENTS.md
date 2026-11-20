@@ -1,22 +1,25 @@
 # AGENTS.md — Đảo Đèn Lồng
 
-3D web game (Three.js) + deterministic headless sim. Requirements: lab board PRD/tickets; rules: LAB.md, RULES.md.
+3D web game (Three.js) + deterministic headless sim, Test Contract **v1.1** (3 nights). Requirements: lab board PRD-0 + Ticket-02 (copied into `docs/notes/phase-N.md`); lab rules: LAB.md, RULES.md.
 
 ## Commands
-- Install: `npm install` · Play: `npm start` → http://localhost:5173
-- Test (must be green before finishing): `npm test`
-- Headless: `node src/headless.js --seed 1 --night 1 --ticks 600 --out out/run.jsonl [--scenario f] [--inputs f]`
-- Regenerate proof: `npm run proof` (writes `docs/proof/phase-N/`)
+- Install: `npm install` · Play: `npm start` → http://localhost:5173 (`?night=2` start at a night, `?fps` FPS meter)
+- Test (must be green before finishing — Stop hook enforces): `npm test`
+- Headless: `node src/headless.js --seed 1 --night 1|2|3 --ticks 600 --out out/run.jsonl [--scenario f] [--inputs f]`
+- Regenerate proof: `npm run proof -- <phase>` (writes `docs/proof/phase-N/`)
 
 ## Layout
-- `src/sim/` pure game logic (no DOM, no Math.random, no Date). `game.js` step/snapshot, `run.js` tick loop, `validate.js` file checks.
-- `src/headless.js` CLI (exit 0 ok / 1 error / 2 malformed file). `web/` renderer only: reads sim state, never changes rules.
-- `game.contract.json` is the single source of tuning — the sim reads it; never duplicate numbers in code.
-- `tests/` node:test. `docs/notes/` assumptions + AI log + retro. `docs/proof/` evidence.
+- `src/sim/` pure logic (no DOM, no Math.random, no Date): `game.js` step/snapshot (mandatory 12-step tick order is commented at the top), `maps.js` standard maps + `groundAt`, `run.js` tick loop, `validate.js` file checks.
+- `src/headless.js` CLI (exit 0 ok / 1 error / 2 malformed file). `web/` renderer + flow + audio only — never game rules.
+- `game.contract.json` tuning = Ticket-02 standard numbers; the sim reads it. Non-tuning constants live in `WORLD` (game.js) / `MAPS` (maps.js).
+- `tests/*.test.js` node:test; `tests/scenarios/phaseN.json` headless cases (≥1 per feature). `docs/notes/` spec + AI log; `docs/proof/` evidence.
 
 ## Rules
-- Contract output is graded automatically: do not rename events/fields; coordinates rounded to 3 dp; events before same-tick snapshot; `end` line last.
-- Any randomness goes through `g.rng` (seeded). Creative/visual extras live in `web/` and must not change headless output.
-- New rule or tuning change ⇒ update test + `docs/notes/phase-N.md` assumption in the same commit.
-- Tests derive expectations from tuning; never paste program output into a test as the expected value. Never hand-edit files in `docs/proof/`.
+- Contract output is graded automatically: exact event/field names, shade states `spawning|wander|chase|recoil|stunned`, coords 3 dp, events before same-tick snapshot, `end` last.
+- Counters that tick down in step 2 (stun, cooldowns, invuln, charm, TTL) — check off-by-one with a test when adding one.
+- Randomness only through `g.rng`. Visual/creative extras live in `web/` and must not change headless output.
+- New rule or tuning change ⇒ update test + `docs/notes/phase-N.md` in the same commit. A test broken by a new ticket: fix or remove it **with the reason** in notes.
+- Tests derive expectations from tuning/spec; never paste program output as the expected value. Never hand-edit `docs/proof/`.
+- Before asserting at tick N in a test, make sure the player is still alive / not hit by an unrelated shade (lesson from Phase 1 + 2).
+- Browser checks via Playwright: finish each evaluate with Esc (pause) — real time keeps running between tool calls.
 - Small commits, one concern each. Do not delete harness files (AGENTS.md, .claude/).
