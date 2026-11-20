@@ -1,0 +1,72 @@
+[
+  {
+    "name": "p3_fuel_runs_out",
+    "requirement": "P3 Nhiên liệu: hao 1/s, hết dầu → lantern_out, deposited 0, ever_lit giữ true",
+    "seed": 1, "ticks": 200, "snapshot_every": 10,
+    "scenario": { "random_motes": false, "random_shades": false, "motes": [], "shades": [], "player": { "pos": [0, 0, -30] }, "lanterns": [ { "id": "L1", "lit": true, "fuel": 2, "deposited": 10 } ] },
+    "expect": {
+      "events": [ { "name": "lantern_out", "data": { "lantern_id": "L1" }, "tick": 120 } ],
+      "snapshots": [ { "tick": 60, "path": "lanterns.0.fuel", "eq": 1 }, { "tick": 120, "path": "lanterns.0.lit", "eq": false }, { "tick": 120, "path": "lanterns.0.deposited", "eq": 0 }, { "tick": 120, "path": "lanterns.0.ever_lit", "eq": true } ],
+      "end": { "state": "playing" }
+    }
+  },
+  {
+    "name": "p3_refuel",
+    "requirement": "P3 Châm dầu: used = min(mang, ceil((100 − fuel)/10)), +5/đom đóm",
+    "seed": 1, "ticks": 5, "snapshot_every": 1,
+    "scenario": { "random_motes": false, "random_shades": false, "motes": [], "shades": [], "player": { "carried": 10 }, "lanterns": [ { "id": "L1", "pos": [0, 0, 1], "lit": true, "fuel": 55 } ] },
+    "inputs": { "frames": [ { "tick": 0, "interact": true }, { "tick": 1, "interact": false } ] },
+    "expect": {
+      "events": [ { "name": "refuel", "data": { "lantern_id": "L1", "amount": 5, "fuel": 100 }, "tick": 1 } ],
+      "snapshots": [ { "tick": 1, "path": "player.carried", "eq": 5 } ],
+      "end": { "state": "playing", "score": 25 }
+    }
+  },
+  {
+    "name": "p3_relight",
+    "requirement": "P3 Thắp lại: đèn từng sáng cần 5 đom đóm, +40, relight: true, relit_count 1",
+    "seed": 1, "ticks": 5, "snapshot_every": 1,
+    "scenario": { "random_motes": false, "random_shades": false, "motes": [], "shades": [], "player": { "carried": 5 }, "lanterns": [ { "id": "L1", "pos": [0, 0, 1], "ever_lit": true } ] },
+    "inputs": { "frames": [ { "tick": 0, "interact": true } ] },
+    "expect": {
+      "events": [ { "name": "lantern_lit", "data": { "lantern_id": "L1", "relight": true }, "tick": 1 } ],
+      "snapshots": [ { "tick": 1, "path": "lanterns.0.relit_count", "eq": 1 }, { "tick": 1, "path": "lanterns.0.fuel", "eq": 100 }, { "tick": 1, "path": "player.capacity", "eq": 12 } ],
+      "end": { "state": "playing", "score": 65 }
+    }
+  },
+  {
+    "name": "p3_shade_drains_weak_lantern",
+    "requirement": "P3 Bóng Mực hút dầu: wander → đèn yếu gần nhất → drain (5/s + hao 1/s), fuel_drain mỗi 60 tick, đèn tắt → wander",
+    "seed": 1, "ticks": 400, "snapshot_every": 1,
+    "scenario": { "random_motes": false, "random_shades": false, "motes": [], "player": { "pos": [0, 0, -30] }, "lanterns": [ { "id": "L1", "pos": [10, 0, 0], "lit": true, "fuel": 20 } ], "shades": [ { "id": "S1", "pos": [14, 0, 0] } ] },
+    "expect": {
+      "events": [ { "name": "fuel_drain", "data": { "lantern_id": "L1", "shade_id": "S1" } }, { "name": "fuel_drain" }, { "name": "lantern_out", "data": { "lantern_id": "L1" } } ],
+      "snapshots": [ { "tick": 40, "path": "shades.0.state", "eq": "drain" }, { "tick": 400, "path": "shades.0.state", "eq": "wander" } ],
+      "end": { "state": "playing" }
+    }
+  },
+  {
+    "name": "p3_pulse_drainer",
+    "requirement": "P3 Tỏa Sáng trúng Bóng Mực đang drain: +15",
+    "seed": 1, "ticks": 3,
+    "scenario": { "random_motes": false, "random_shades": false, "motes": [], "player": { "pos": [10, 0, 3], "carried": 3 }, "lanterns": [ { "id": "L1", "pos": [10, 0, 0], "lit": true, "fuel": 25 } ], "shades": [ { "id": "S1", "pos": [11.5, 0, 0], "state": "drain", "target_lantern_id": "L1" } ] },
+    "inputs": { "frames": [ { "tick": 0, "pulse": true } ] },
+    "expect": { "events": [ { "name": "pulse", "data": { "stunned_ids": ["S1"] }, "tick": 1 } ], "end": { "state": "playing", "score": 15 } }
+  },
+  {
+    "name": "p3_no_early_win_then_dawn",
+    "requirement": "P3 Luật thắng: thắp đủ đèn không kết thúc Đêm; bình minh còn ≥ 3/5 → dawn_survived",
+    "seed": 1, "ticks": 400,
+    "scenario": { "random_motes": false, "random_shades": false, "motes": [], "shades": [], "player": { "carried": 10 }, "time_left_s": 5,
+      "lanterns": [ { "id": "L1", "pos": [0, 0, 1.5] }, { "id": "L2", "lit": true }, { "id": "L3", "lit": true }, { "id": "L4", "lit": true }, { "id": "L5", "lit": true } ] },
+    "inputs": { "frames": [ { "tick": 0, "interact": true } ] },
+    "expect": { "events": [ { "name": "lantern_lit", "tick": 1 }, { "name": "game_over", "data": { "result": "won", "reason": "dawn_survived" }, "tick": 300 } ], "end": { "state": "won", "ticks": 300 } }
+  },
+  {
+    "name": "p3_dawn_below_threshold",
+    "requirement": "P3 Thua khi bình minh mà số đèn sáng < ngưỡng (2/5)",
+    "seed": 1, "ticks": 200,
+    "scenario": { "random_motes": false, "random_shades": false, "motes": [], "shades": [], "time_left_s": 1, "lanterns": [ { "id": "L1", "lit": true }, { "id": "L2", "lit": true } ] },
+    "expect": { "events": [ { "name": "game_over", "data": { "result": "lost", "reason": "dawn" }, "tick": 60 } ], "end": { "state": "lost", "score": 0 } }
+  }
+]

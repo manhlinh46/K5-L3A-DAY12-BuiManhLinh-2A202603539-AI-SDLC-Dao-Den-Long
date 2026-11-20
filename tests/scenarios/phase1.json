@@ -1,81 +1,438 @@
 [
   {
     "name": "core_loop_pickup_deposit_light",
-    "requirement": "P1: nhặt đom đóm, mang về nạp và thắp đèn (số chuẩn Ticket-02: cost 10, +10/đom đóm nạp)",
-    "seed": 1, "ticks": 300,
-    "scenario": { "random_motes": false, "random_shades": false, "shades": [], "motes": [[0,0,2],[0,0,4],[0,0,6],[0,0,8],[0,0,10],[0,0,12],[0,0,14],[0,0,16],[0,0,18],[0,0,20]] },
-    "inputs": { "frames": [ { "tick": 0, "move": [0, 1] }, { "tick": 235, "move": [0, 0], "interact": true }, { "tick": 236, "interact": false } ] },
+    "requirement": "P1: nhặt đom đóm, mang về nạp và thắp đèn (Ticket-03: +5/đom đóm nạp, +100 thắp lần đầu)",
+    "seed": 1,
+    "ticks": 300,
+    "scenario": {
+      "random_motes": false,
+      "random_shades": false,
+      "shades": [],
+      "motes": [
+        [
+          0,
+          0,
+          2
+        ],
+        [
+          0,
+          0,
+          4
+        ],
+        [
+          0,
+          0,
+          6
+        ],
+        [
+          0,
+          0,
+          8
+        ],
+        [
+          0,
+          0,
+          10
+        ],
+        [
+          0,
+          0,
+          12
+        ],
+        [
+          0,
+          0,
+          14
+        ],
+        [
+          0,
+          0,
+          16
+        ],
+        [
+          0,
+          0,
+          18
+        ],
+        [
+          0,
+          0,
+          20
+        ]
+      ]
+    },
+    "inputs": {
+      "frames": [
+        {
+          "tick": 0,
+          "move": [
+            0,
+            1
+          ]
+        },
+        {
+          "tick": 235,
+          "move": [
+            0,
+            0
+          ],
+          "interact": true
+        },
+        {
+          "tick": 236,
+          "interact": false
+        }
+      ]
+    },
     "expect": {
       "events": [
-        { "name": "mote_picked", "data": { "carried": 1 } },
-        { "name": "mote_picked", "data": { "carried": 10 } },
-        { "name": "deposit", "data": { "lantern_id": "L1", "amount": 10, "deposited": 10 }, "tick": 236 },
-        { "name": "lantern_lit", "data": { "lantern_id": "L1" }, "tick": 236 }
+        {
+          "name": "mote_picked",
+          "data": {
+            "carried": 1
+          }
+        },
+        {
+          "name": "mote_picked",
+          "data": {
+            "carried": 10
+          }
+        },
+        {
+          "name": "deposit",
+          "data": {
+            "lantern_id": "L1",
+            "amount": 10,
+            "deposited": 10
+          },
+          "tick": 236
+        },
+        {
+          "name": "lantern_lit",
+          "data": {
+            "lantern_id": "L1",
+            "relight": false
+          },
+          "tick": 236
+        }
       ],
-      "end": { "state": "playing", "score": 200 }
+      "end": {
+        "state": "playing",
+        "score": 150
+      }
     }
   },
   {
     "name": "pulse_stuns_shade",
     "requirement": "P1: tỏa sáng xua Bóng Mực, tốn ánh sáng (3 đom đóm, +5)",
-    "seed": 1, "ticks": 180,
-    "scenario": { "random_motes": false, "random_shades": false, "motes": [], "player": { "carried": 3 }, "shades": [ { "id": "S1", "pos": [4, 0, 0] } ] },
-    "inputs": { "frames": [ { "tick": 0, "pulse": true }, { "tick": 1, "pulse": false } ] },
+    "seed": 1,
+    "ticks": 180,
+    "scenario": {
+      "random_motes": false,
+      "random_shades": false,
+      "motes": [],
+      "player": {
+        "carried": 3
+      },
+      "shades": [
+        {
+          "id": "S1",
+          "pos": [
+            4,
+            0,
+            0
+          ]
+        }
+      ]
+    },
+    "inputs": {
+      "frames": [
+        {
+          "tick": 0,
+          "pulse": true
+        },
+        {
+          "tick": 1,
+          "pulse": false
+        }
+      ]
+    },
     "snapshot_every": 1,
     "expect": {
-      "events": [ { "name": "pulse", "data": { "stunned_ids": ["S1"] }, "tick": 1 } ],
-      "no_events": ["player_hit"],
-      "snapshots": [ { "tick": 1, "path": "player.carried", "eq": 0 }, { "tick": 15, "path": "shades.0.pos.0", "approx": 8 }, { "tick": 120, "path": "shades.0.state", "eq": "stunned" } ],
-      "end": { "state": "playing", "score": 5 }
+      "events": [
+        {
+          "name": "pulse",
+          "data": {
+            "stunned_ids": [
+              "S1"
+            ]
+          },
+          "tick": 1
+        }
+      ],
+      "no_events": [
+        "player_hit"
+      ],
+      "snapshots": [
+        {
+          "tick": 1,
+          "path": "player.carried",
+          "eq": 0
+        },
+        {
+          "tick": 15,
+          "path": "shades.0.pos.0",
+          "approx": 8
+        },
+        {
+          "tick": 120,
+          "path": "shades.0.state",
+          "eq": "stunned"
+        }
+      ],
+      "end": {
+        "state": "playing",
+        "score": 5
+      }
     }
   },
   {
     "name": "shade_hits_until_lost",
     "requirement": "P1: bị Bóng Mực chạm mất Ngọn Lửa, rơi đom đóm; hết lửa thì thua",
-    "seed": 1, "ticks": 600,
-    "scenario": { "random_motes": false, "random_shades": false, "motes": [], "player": { "flames": 2, "carried": 4 }, "shades": [ { "id": "S1", "pos": [3, 0, 0] } ] },
+    "seed": 1,
+    "ticks": 600,
+    "scenario": {
+      "random_motes": false,
+      "random_shades": false,
+      "motes": [],
+      "player": {
+        "flames": 2,
+        "carried": 4
+      },
+      "shades": [
+        {
+          "id": "S1",
+          "pos": [
+            3,
+            0,
+            0
+          ]
+        }
+      ]
+    },
     "expect": {
       "events": [
-        { "name": "player_hit", "data": { "by": "shade", "flames": 1, "dropped": 2 } },
-        { "name": "player_hit", "data": { "by": "shade", "flames": 0, "dropped": 1 } },
-        { "name": "game_over", "data": { "result": "lost", "reason": "no_flames" } }
+        {
+          "name": "player_hit",
+          "data": {
+            "by": "shade",
+            "flames": 1,
+            "dropped": 2
+          }
+        },
+        {
+          "name": "player_hit",
+          "data": {
+            "by": "shade",
+            "flames": 0,
+            "dropped": 1
+          }
+        },
+        {
+          "name": "game_over",
+          "data": {
+            "result": "lost",
+            "reason": "no_flames"
+          }
+        }
       ],
-      "end": { "state": "lost" }
+      "end": {
+        "state": "lost"
+      }
     }
   },
   {
     "name": "dawn_ends_night",
     "requirement": "P1: hết thời lượng Đêm thì thua (dawn)",
-    "seed": 1, "ticks": 1000,
-    "scenario": { "random_motes": false, "random_shades": false, "motes": [], "shades": [], "time_left_s": 2 },
+    "seed": 1,
+    "ticks": 1000,
+    "scenario": {
+      "random_motes": false,
+      "random_shades": false,
+      "motes": [],
+      "shades": [],
+      "time_left_s": 2
+    },
     "expect": {
-      "events": [ { "name": "game_over", "data": { "result": "lost", "reason": "dawn" }, "tick": 120 } ],
-      "end": { "state": "lost", "ticks": 120 }
+      "events": [
+        {
+          "name": "game_over",
+          "data": {
+            "result": "lost",
+            "reason": "dawn"
+          },
+          "tick": 120
+        }
+      ],
+      "end": {
+        "state": "lost",
+        "ticks": 120
+      }
     }
   },
   {
-    "name": "light_last_lantern_wins",
-    "requirement": "P1: thắp hết đèn thì thắng, có điểm thưởng",
-    "seed": 1, "ticks": 60,
-    "scenario": { "random_motes": false, "random_shades": false, "motes": [], "shades": [], "player": { "carried": 10 }, "time_left_s": 100,
-      "lanterns": [ { "id": "L1", "pos": [0, 0, 1.5] }, { "id": "L2", "lit": true }, { "id": "L3", "lit": true }, { "id": "L4", "lit": true }, { "id": "L5", "lit": true } ] },
-    "inputs": { "frames": [ { "tick": 0, "interact": true } ] },
+    "name": "dawn_survived_wins",
+    "requirement": "P1→P3: thắng khi tới bình minh còn ≥ 3/5 đèn sáng (Ticket-03 thay luật thắng sớm), có điểm bình minh",
+    "seed": 1,
+    "ticks": 200,
+    "scenario": {
+      "random_motes": false,
+      "random_shades": false,
+      "motes": [],
+      "shades": [],
+      "player": {
+        "carried": 10
+      },
+      "time_left_s": 2,
+      "lanterns": [
+        {
+          "id": "L1",
+          "pos": [
+            0,
+            0,
+            1.5
+          ]
+        },
+        {
+          "id": "L2",
+          "lit": true
+        },
+        {
+          "id": "L3",
+          "lit": true
+        },
+        {
+          "id": "L4",
+          "lit": true
+        }
+      ]
+    },
+    "inputs": {
+      "frames": [
+        {
+          "tick": 0,
+          "interact": true
+        }
+      ]
+    },
     "expect": {
-      "events": [ { "name": "lantern_lit", "data": { "lantern_id": "L1" }, "tick": 1 }, { "name": "game_over", "data": { "result": "won", "reason": "all_lit" }, "tick": 1 } ],
-      "end": { "state": "won", "ticks": 1, "score": 548 }
+      "events": [
+        {
+          "name": "lantern_lit",
+          "data": {
+            "lantern_id": "L1",
+            "relight": false
+          },
+          "tick": 1
+        },
+        {
+          "name": "game_over",
+          "data": {
+            "result": "won",
+            "reason": "dawn_survived"
+          },
+          "tick": 120
+        }
+      ],
+      "end": {
+        "state": "won",
+        "ticks": 120,
+        "score": 892
+      }
     }
   },
   {
     "name": "lantern_safe_zone",
     "requirement": "P1: Bóng Mực sợ đèn (Ticket-02: chỉ đèn đã sáng, chặn ở mép 6 m)",
-    "seed": 1, "ticks": 1200,
-    "scenario": { "random_motes": false, "random_shades": false, "motes": [], "lanterns": [ { "id": "L1", "pos": [0, 0, 0], "lit": true } ], "shades": [ { "id": "S1", "pos": [10, 0, 0] }, { "id": "S2", "pos": [-9, 0, 5] } ] },
-    "expect": { "no_events": ["player_hit"], "snapshots": [ { "tick": 1200, "path": "shades.0.state", "eq": "chase" } ], "end": { "state": "playing" } }
+    "seed": 1,
+    "ticks": 1200,
+    "scenario": {
+      "random_motes": false,
+      "random_shades": false,
+      "motes": [],
+      "lanterns": [
+        {
+          "id": "L1",
+          "pos": [
+            0,
+            0,
+            0
+          ],
+          "lit": true
+        }
+      ],
+      "shades": [
+        {
+          "id": "S1",
+          "pos": [
+            10,
+            0,
+            0
+          ]
+        },
+        {
+          "id": "S2",
+          "pos": [
+            -9,
+            0,
+            5
+          ]
+        }
+      ]
+    },
+    "expect": {
+      "no_events": [
+        "player_hit"
+      ],
+      "snapshots": [
+        {
+          "tick": 1200,
+          "path": "shades.0.state",
+          "eq": "chase"
+        }
+      ],
+      "end": {
+        "state": "playing"
+      }
+    }
   },
   {
     "name": "default_night_standing_still",
-    "requirement": "P1: màn mặc định Đêm 1 chạy tới kết thúc (Bóng Mực sinh từ tick 300)",
-    "seed": 2026, "ticks": 18000,
-    "expect": { "events": [ { "name": "shade_spawned", "data": { "id": "S1" }, "tick": 300 }, { "name": "player_hit" }, { "name": "game_over", "data": { "result": "lost", "reason": "no_flames" } } ], "end": { "state": "lost" } }
+    "requirement": "P1→P3: màn mặc định Đêm 1, đứng yên không thắp đèn → bình minh với 0/5 đèn → thua dawn (Đêm 240 s)",
+    "seed": 2026,
+    "ticks": 18000,
+    "expect": {
+      "events": [
+        {
+          "name": "shade_spawned",
+          "data": {
+            "id": "S1"
+          },
+          "tick": 300
+        },
+        {
+          "name": "game_over",
+          "data": {
+            "result": "lost",
+            "reason": "dawn"
+          },
+          "tick": 14400
+        }
+      ],
+      "end": {
+        "state": "lost",
+        "ticks": 14400
+      }
+    }
   }
 ]

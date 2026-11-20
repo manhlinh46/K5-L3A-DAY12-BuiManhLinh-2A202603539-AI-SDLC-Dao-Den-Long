@@ -12,7 +12,7 @@ function need(cond, msg) {
 }
 
 const BUTTONS = ['jump', 'interact', 'pulse', 'dash', 'pause'];
-const SHADE_STATES = ['spawning', 'wander', 'chase', 'recoil', 'stunned'];
+const SHADE_STATES = ['spawning', 'wander', 'chase', 'recoil', 'stunned', 'drain'];
 const DRIFTER_STATES = ['idle', 'chase', 'flee'];
 
 export function validateInputs(obj) {
@@ -47,7 +47,7 @@ export function validateScenario(obj, lanternIds) {
     const p = obj.player;
     need(isObj(p), 'scenario.player: must be an object');
     if ('pos' in p) need(isVec3(p.pos), 'scenario.player.pos: must be [x, y, z]');
-    for (const k of ['carried', 'flames', 'invuln_ticks', 'dash_cd_ticks', 'pulse_cd_ticks', 'charm_ticks']) if (k in p) need(isNat(p[k]), `scenario.player.${k}: must be an integer >= 0`);
+    for (const k of ['carried', 'flames', 'invuln_ticks', 'dash_cd_ticks', 'pulse_cd_ticks', 'charm_ticks', 'successful_lights']) if (k in p) need(isNat(p[k]), `scenario.player.${k}: must be an integer >= 0`);
   }
   for (const k of ['random_motes', 'random_shades', 'random_drifters', 'wind_enabled']) if (k in obj) need(typeof obj[k] === 'boolean', `scenario.${k}: must be a boolean`);
   if ('motes' in obj) {
@@ -66,6 +66,7 @@ export function validateScenario(obj, lanternIds) {
       need(isObj(s) && isVec3(s.pos), `scenario.shades[${i}].pos: must be [x, y, z]`);
       if ('state' in s) need(SHADE_STATES.includes(s.state), `scenario.shades[${i}].state: must be one of ${SHADE_STATES.join(', ')}`);
       if ('state_ticks_left' in s) need(isNat(s.state_ticks_left), `scenario.shades[${i}].state_ticks_left: must be an integer >= 0`);
+      if ('target_lantern_id' in s && s.target_lantern_id !== null) need(lanternIds.includes(s.target_lantern_id), `scenario.shades[${i}].target_lantern_id: unknown lantern "${s.target_lantern_id}"`);
     });
     uniqueIds(obj.shades, 'scenario.shades');
   }
@@ -99,6 +100,9 @@ export function validateScenario(obj, lanternIds) {
       if ('pos' in l) need(isVec3(l.pos), `${at}.pos: must be [x, y, z]`);
       if ('deposited' in l) need(isNat(l.deposited), `${at}.deposited: must be an integer >= 0`);
       if ('lit' in l) need(typeof l.lit === 'boolean', `${at}.lit: must be a boolean`);
+      if ('ever_lit' in l) need(typeof l.ever_lit === 'boolean', `${at}.ever_lit: must be a boolean`);
+      if ('fuel' in l) need(isNum(l.fuel) && l.fuel >= 0 && l.fuel <= 100, `${at}.fuel: must be a number in [0, 100]`);
+      if ('relit_count' in l) need(isNat(l.relit_count), `${at}.relit_count: must be an integer >= 0`);
     });
   }
   if ('time_left_s' in obj) need(isNum(obj.time_left_s) && obj.time_left_s > 0, 'scenario.time_left_s: must be a number > 0');
