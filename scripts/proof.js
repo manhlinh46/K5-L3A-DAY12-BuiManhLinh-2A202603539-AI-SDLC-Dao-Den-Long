@@ -82,9 +82,9 @@ const sk = readJson('soak.json');
 if (b || sk) md.push('', '## Benchmark & soak (Ticket-04 thresholds, measured on the dev machine; the grader re-measures)', '', '| Metric | Value | Threshold | Result |', '|---|---|---|---|');
 if (b) {
   md.push(`| avg_fps | ${b.avg_fps} | ≥ 60 | ${b.avg_fps >= 60 ? 'PASS' : 'FAIL'} |`, `| p1_low_fps | ${b.p1_low_fps} | ≥ 30 | ${b.p1_low_fps >= 30 ? 'PASS' : 'FAIL'} |`, `| load_ms | ${b.load_ms} | ≤ 10000 | ${b.load_ms <= 10000 ? 'PASS' : 'FAIL'} |`, `| frame_ms_p95 / frames / peak_mem_mb | ${b.frame_ms_p95} / ${b.frames} / ${b.peak_mem_mb} | — | info |`);
-  md.push('', `Renderer: ${b.renderer}  `, `OS: ${b.os}`, '');
 }
 if (sk) md.push(`| soak crashes | ${sk.crashes} | = 0 | ${sk.crashes === 0 ? 'PASS' : 'FAIL'} |`, `| soak mem_end / mem_start | ${sk.mem_end_mb} / ${sk.mem_start_mb} MB = ${(sk.mem_end_mb / sk.mem_start_mb).toFixed(3)} | ≤ 1.2 | ${sk.mem_end_mb <= 1.2 * sk.mem_start_mb ? 'PASS' : 'FAIL'} |`, `| soak results | ${sk.results.join(', ')} | — | info |`);
+if (b) md.push('', `Renderer: ${b.renderer}  `, `OS: ${b.os}`, '');
 
 md.push('', `**Overall: ${allPass ? 'PASS' : 'FAIL'}**`, '');
 writeFileSync(join(outDir, 'SUMMARY.md'), md.join('\n'));
