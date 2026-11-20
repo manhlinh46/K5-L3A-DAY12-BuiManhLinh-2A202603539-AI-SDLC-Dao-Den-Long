@@ -1,0 +1,43 @@
+
+> dao-den-long@0.1.0 test
+> node --test "tests/*.test.js"
+
+✔ contract file declares all required fields and tuning keys (1.5448ms)
+✔ full default run: exit 0, valid JSONL, snapshots every N from tick 0, end line last (109.7509ms)
+✔ determinism through the CLI: two runs are byte-identical (240.5391ms)
+✔ malformed inputs/scenario -> exit 2 with message on stderr (777.2962ms)
+✔ other errors -> non-zero exit (missing args, missing file, unknown night) (280.9492ms)
+✔ scenario phase1.json:core_loop_pickup_deposit_light — Nhặt đom đóm, mang về nạp và thắp đèn (PRD-0 §2) (100.8687ms)
+✔ scenario phase1.json:pulse_stuns_shade — Tỏa sáng xua Bóng Mực, tốn ánh sáng (PRD-0 §1-2) (106.0409ms)
+✔ scenario phase1.json:shade_hits_until_lost — Bị Bóng Mực chạm mất máu; hết máu thì thua (PRD-0 §1) (95.5151ms)
+✔ scenario phase1.json:dawn_ends_night — Hết thời lượng Đêm thì thua (giả định A6) (94.8921ms)
+✔ scenario phase1.json:light_last_lantern_wins — Thắp hết đèn thì thắng, có điểm (PRD-0 §1) (97.1925ms)
+✔ scenario phase1.json:lantern_safe_zone — Bóng Mực sợ đèn: không vào safe_radius (PRD-0 §1) (127.6598ms)
+✔ scenario phase1.json:default_night_standing_still — Màn mặc định: đom đóm + Bóng Mực tự sinh, chạy tới kết thúc (111.5563ms)
+✔ tick model: snapshot 0 is pre-input state, --ticks N runs exactly N steps, ends with end line (5.1703ms)
+✔ movement: player_speed m/s, camera yaw rotation per contract formula, diagonal normalised (2.7087ms)
+✔ absent fields keep previous value; no inputs = player stands still (0.9695ms)
+✔ jump: rising edge only, lands back on y=0 (1.1166ms)
+✔ island edge: no fall (fall_enabled=false), player stays within island radius (1.4482ms)
+✔ pickup: within pickup_radius auto-picks, +per_mote, respects carry_capacity (0.6113ms)
+✔ deposit: interact within interact_radius, partial then lit at lantern_cost (0.8313ms)
+✔ interact is edge-triggered: holding it deposits once (0.4103ms)
+✔ pulse: costs pulse_cost, stuns + pushes shades within pulse_radius, cooldown, +per_stun (1.7999ms)
+✔ stun lasts pulse_stun_s: shade frozen, then resumes chase (1.5006ms)
+✔ shade chases at shade_speed (1.2112ms)
+✔ hit: within shade_hit_radius loses a flame, drops hit_drop_ratio of motes, invuln_s (1.1198ms)
+✔ safe_radius: shades never get within safe_radius of a lantern (5.7173ms)
+✔ win: lighting the last lantern -> game_over won all_lit with time + flame bonus (0.6999ms)
+✔ scenario setup awards no score / events (pre-lit lanterns) (0.346ms)
+✔ lose: no flames -> lost no_flames; time out -> lost dawn (0.6064ms)
+✔ random spawning: shade_spawned events with unique ids; disabled by random_shades=false (15.3434ms)
+✔ determinism: same seed/scenario/inputs -> identical output; different seed -> different world (15.6604ms)
+✔ step() after game over is a no-op (0.3328ms)
+ℹ tests 31
+ℹ suites 0
+ℹ pass 31
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1539.5147
