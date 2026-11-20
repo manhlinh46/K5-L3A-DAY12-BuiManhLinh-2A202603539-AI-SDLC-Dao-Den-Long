@@ -5,8 +5,9 @@ import { spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const ROOT = new URL('..', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1');
+const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const contract = JSON.parse(readFileSync(join(ROOT, 'game.contract.json'), 'utf8'));
 const dir = mkdtempSync(join(tmpdir(), 'ddl-'));
 const file = (name, obj) => {

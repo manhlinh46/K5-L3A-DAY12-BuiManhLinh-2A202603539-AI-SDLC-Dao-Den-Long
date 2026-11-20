@@ -3,20 +3,25 @@ on: [push, pull_request]
 jobs:
   test:
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
+        node: [20, 22]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: ${{ matrix.node }}
+      - run: node --version
       - run: npm ci
       - run: npm test
-      - name: Headless smoke + determinism
+      - name: Headless smoke + determinism (all nights)
         run: |
           mkdir -p out
-          node src/headless.js --seed 7 --night 1 --ticks 18000 --out out/a.jsonl
-          node src/headless.js --seed 7 --night 1 --ticks 18000 --out out/b.jsonl
-          cmp out/a.jsonl out/b.jsonl
-          tail -n 1 out/a.jsonl
+          for n in 1 2 3; do
+            node src/headless.js --seed 7 --night $n --ticks 21600 --out out/a$n.jsonl
+            node src/headless.js --seed 7 --night $n --ticks 21600 --out out/b$n.jsonl
+            cmp out/a$n.jsonl out/b$n.jsonl
+            tail -n 1 out/a$n.jsonl
+          done

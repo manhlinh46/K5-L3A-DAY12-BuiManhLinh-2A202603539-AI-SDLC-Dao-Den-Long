@@ -22,4 +22,5 @@
 - Tests derive expectations from tuning/spec; never paste program output as the expected value. Never hand-edit `docs/proof/`.
 - Before asserting at tick N in a test, make sure the player is still alive / not hit by an unrelated shade (lesson from Phase 1 + 2).
 - Browser checks via Playwright: finish each evaluate with Esc (pause) — real time keeps running between tool calls.
+- Target Node ≥ 20 (CI: ubuntu + macos × Node 20/22) although the dev machine runs Node 24: no newer-only APIs/flags (e.g. `node --test` globs). `npm test` goes through `scripts/run-tests.js`.
 - Small commits, one concern each. Do not delete harness files (AGENTS.md, .claude/).
