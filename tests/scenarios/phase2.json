@@ -1,0 +1,144 @@
+[
+  {
+    "name": "p2_dash",
+    "requirement": "P2 Lướt: 14 m/s × 0.2 s = 2.8 m, hồi chiêu 1.5 s tính từ lúc lướt",
+    "seed": 1, "ticks": 120, "snapshot_every": 1,
+    "scenario": { "random_motes": false, "random_shades": false, "motes": [], "shades": [] },
+    "inputs": { "frames": [ { "tick": 0, "dash": true }, { "tick": 1, "dash": false }, { "tick": 30, "dash": true }, { "tick": 31, "dash": false }, { "tick": 90, "dash": true }, { "tick": 91, "dash": false } ] },
+    "expect": {
+      "events": [ { "name": "dash", "tick": 1 }, { "name": "dash", "tick": 91 } ],
+      "snapshots": [ { "tick": 12, "path": "player.pos.2", "approx": 2.8 }, { "tick": 1, "path": "player.dash_cd_s", "approx": 1.5 } ],
+      "end": { "state": "playing" }
+    }
+  },
+  {
+    "name": "p2_fall_respawn",
+    "requirement": "P2 Rơi khỏi đảo: −1 lửa, mất hết đom đóm (lost), chờ 60 tick, hồi sinh ở điểm xuất phát, bất tử 90 tick",
+    "seed": 1, "ticks": 200, "snapshot_every": 1,
+    "scenario": { "random_motes": false, "random_shades": false, "motes": [], "shades": [], "player": { "pos": [0, 0, 39.5], "carried": 6 } },
+    "inputs": { "frames": [ { "tick": 0, "move": [0, 1] }, { "tick": 10, "move": [0, 0] } ] },
+    "expect": {
+      "events": [ { "name": "player_hit", "data": { "by": "fall", "flames": 2, "dropped": 0, "lost": 6 } } ],
+      "end": { "state": "playing" }
+    }
+  },
+  {
+    "name": "p2_pause",
+    "requirement": "P2 Tạm dừng: tick tăng, sim_tick/thời gian đứng yên, state paused, sự kiện paused/resumed",
+    "seed": 1, "ticks": 100, "snapshot_every": 10,
+    "scenario": { "random_motes": false, "random_shades": false, "motes": [], "shades": [] },
+    "inputs": { "frames": [ { "tick": 0, "move": [0, 1] }, { "tick": 19, "pause": true }, { "tick": 20, "pause": false }, { "tick": 59, "pause": true }, { "tick": 60, "pause": false } ] },
+    "expect": {
+      "events": [ { "name": "paused", "tick": 20 }, { "name": "resumed", "tick": 60 } ],
+      "snapshots": [ { "tick": 50, "path": "state", "eq": "paused" }, { "tick": 50, "path": "sim_tick", "eq": 19 }, { "tick": 50, "path": "player.pos.2", "approx": 1.9 }, { "tick": 100, "path": "sim_tick", "eq": 60 } ],
+      "end": { "state": "playing", "ticks": 100 }
+    }
+  },
+  {
+    "name": "p2_charm",
+    "requirement": "P2 Bùa Gió: nhặt như đom đóm, 600 tick, chạy 7.2 m/s",
+    "seed": 1, "night": 2, "ticks": 61, "snapshot_every": 1,
+    "scenario": { "random_motes": false, "random_shades": false, "random_drifters": false, "motes": [], "shades": [], "player": { "pos": [35.5, 0, 0] } },
+    "inputs": { "frames": [ { "tick": 1, "move": [-1, 0] } ] },
+    "expect": {
+      "events": [ { "name": "charm_picked", "data": { "charm_id": "C1", "charm_ticks": 600 }, "tick": 1 } ],
+      "snapshots": [ { "tick": 61, "path": "player.pos.0", "approx": 28.3 }, { "tick": 1, "path": "charms.0.available", "eq": false }, { "tick": 1, "path": "charms.0.respawn_s", "approx": 45 } ],
+      "end": { "state": "playing" }
+    }
+  },
+  {
+    "name": "p2_drifter_steal",
+    "requirement": "P2 Gió Lạc: đuổi khi mang ≥5 trong 15 m, cướp min(3, mang), bỏ chạy 240 tick rồi biến mất",
+    "seed": 1, "night": 2, "ticks": 400,
+    "scenario": { "random_motes": false, "random_shades": false, "random_drifters": false, "motes": [], "shades": [], "player": { "carried": 7 }, "drifters": [ { "id": "D1", "pos": [10, 1.2, 0] } ] },
+    "expect": {
+      "events": [ { "name": "drifter_steal", "data": { "drifter_id": "D1", "amount": 3, "carried": 4 } } ],
+      "no_events": ["player_hit"],
+      "snapshots": [ { "tick": 400, "path": "drifters", "eq": [] }, { "tick": 400, "path": "player.carried", "eq": 4 } ],
+      "end": { "state": "playing" }
+    }
+  },
+  {
+    "name": "p2_drifter_pulse_drop",
+    "requirement": "P2 Tỏa Sáng trúng Gió Lạc đang bỏ chạy có đồ: thả lại đom đóm (drifter_drop, kind dropped)",
+    "seed": 1, "night": 2, "ticks": 5, "snapshot_every": 1,
+    "scenario": { "random_motes": false, "random_shades": false, "random_drifters": false, "motes": [], "shades": [], "player": { "carried": 3 }, "drifters": [ { "id": "D1", "pos": [3, 1.2, 0], "state": "flee", "stolen": 3 } ] },
+    "inputs": { "frames": [ { "tick": 0, "pulse": true } ] },
+    "expect": {
+      "events": [ { "name": "pulse", "tick": 1 }, { "name": "drifter_drop", "data": { "drifter_id": "D1", "amount": 3 }, "tick": 1 } ],
+      "snapshots": [ { "tick": 1, "path": "motes_active", "eq": 3 }, { "tick": 1, "path": "motes.0.kind", "eq": "dropped" }, { "tick": 1, "path": "drifters.0.stolen", "eq": 0 } ],
+      "end": { "state": "playing" }
+    }
+  },
+  {
+    "name": "p2_launch_pad_night2",
+    "requirement": "P2 Đêm 2 bục nhảy: bay ≈1.4 s sang đảo kia, không rơi",
+    "seed": 1, "night": 2, "ticks": 120, "snapshot_every": 1,
+    "scenario": { "random_motes": false, "random_shades": false, "random_drifters": false, "motes": [], "shades": [], "player": { "pos": [50, 0, -18] } },
+    "expect": {
+      "no_events": ["player_hit"],
+      "snapshots": [ { "tick": 84, "path": "player.grounded", "eq": true }, { "tick": 83, "path": "player.grounded", "eq": false }, { "tick": 84, "path": "player.pos.0", "approx": 18.763, "eps": 0.01 } ],
+      "end": { "state": "playing" }
+    }
+  },
+  {
+    "name": "p2_night3_pad_to_tier2",
+    "requirement": "P2 Đêm 3 bục (0,3,13): đáp lên tầng 2 (Y=6)",
+    "seed": 1, "night": 3, "ticks": 90, "snapshot_every": 1,
+    "scenario": { "random_motes": false, "random_shades": false, "random_drifters": false, "wind_enabled": false, "motes": [], "shades": [], "player": { "pos": [0, 3, 13] } },
+    "expect": { "no_events": ["player_hit"], "snapshots": [ { "tick": 90, "path": "player.pos.1", "eq": 6 }, { "tick": 90, "path": "player.grounded", "eq": true } ], "end": { "state": "playing" } }
+  },
+  {
+    "name": "p2_night3_wind",
+    "requirement": "P2 Đêm 3 gió mạnh: mỗi 30 s, kéo dài 5 s",
+    "seed": 3, "night": 3, "ticks": 2150, "snapshot_every": 1,
+    "scenario": { "random_motes": false, "random_shades": false, "random_drifters": false, "motes": [], "shades": [] },
+    "expect": { "snapshots": [ { "tick": 1799, "path": "wind.active", "eq": false }, { "tick": 1800, "path": "wind.active", "eq": true }, { "tick": 2100, "path": "wind.active", "eq": false } ], "end": { "state": "playing" } }
+  },
+  {
+    "name": "p2_safe_zone_eviction",
+    "requirement": "P2 Vùng an toàn: đèn vừa thắp đẩy Bóng Mực bên trong ra mép 6 m trong ≤ 30 tick, không gây sát thương",
+    "seed": 1, "ticks": 40, "snapshot_every": 1,
+    "scenario": { "random_motes": false, "random_shades": false, "motes": [], "player": { "carried": 10 }, "lanterns": [ { "id": "L1", "pos": [0, 0, 1.5] } ], "shades": [ { "id": "S1", "pos": [2, 0, 1.5] } ] },
+    "inputs": { "frames": [ { "tick": 0, "interact": true } ] },
+    "expect": {
+      "events": [ { "name": "lantern_lit", "tick": 1 } ],
+      "no_events": ["player_hit"],
+      "snapshots": [ { "tick": 30, "path": "shades.0.pos.0", "approx": 6, "eps": 0.01 } ],
+      "end": { "state": "playing" }
+    }
+  },
+  {
+    "name": "p2_shade_states",
+    "requirement": "P2 Trạng thái Bóng Mực: spawning → wander/chase; chạm → recoil 60 tick",
+    "seed": 7, "ticks": 400, "snapshot_every": 1,
+    "scenario": { "random_motes": false, "motes": [], "lanterns": [ { "id": "L1", "pos": [0, 0, 0], "lit": true } ] },
+    "expect": {
+      "events": [ { "name": "shade_spawned", "data": { "id": "S1" }, "tick": 300 }, { "name": "shade_spawned", "data": { "id": "S2" }, "tick": 300 } ],
+      "snapshots": [ { "tick": 300, "path": "shades.0.state", "eq": "spawning" }, { "tick": 301, "path": "shades.0.state", "eq": "wander" } ],
+      "end": { "state": "playing" }
+    }
+  },
+  {
+    "name": "p2_night2_default",
+    "requirement": "P2 Đêm 2 mặc định: 6 đèn, Gió Lạc sinh ở tick 1200, Bóng Mực mỗi 7 s",
+    "seed": 5, "night": 2, "ticks": 1300, "snapshot_every": 100,
+    "scenario": { "player": { "invuln_ticks": 100000 } },
+    "expect": {
+      "events": [ { "name": "shade_spawned", "tick": 300 }, { "name": "shade_spawned", "tick": 300 }, { "name": "shade_spawned", "tick": 720 }, { "name": "shade_spawned", "tick": 1140 } ],
+      "snapshots": [ { "tick": 0, "path": "lanterns.5.id", "eq": "L6" }, { "tick": 1200, "path": "drifters.0.id", "eq": "D1" } ],
+      "end": { "state": "playing" }
+    }
+  },
+  {
+    "name": "p2_night3_default",
+    "requirement": "P2 Đêm 3 mặc định: 7 đèn, Bóng Mực mỗi 6 s, tối đa 10, Đêm 360 s",
+    "seed": 5, "night": 3, "ticks": 4000, "snapshot_every": 100,
+    "scenario": { "player": { "invuln_ticks": 100000 } },
+    "expect": {
+      "events": [ { "name": "shade_spawned", "tick": 300 }, { "name": "shade_spawned", "tick": 660 } ],
+      "snapshots": [ { "tick": 0, "path": "time_left_s", "eq": 360 }, { "tick": 0, "path": "lanterns.0.pos", "eq": [0, 6, 6] }, { "tick": 4000, "path": "shades.length", "eq": 10 } ],
+      "end": { "state": "playing" }
+    }
+  }
+]

@@ -22,10 +22,16 @@ const readLines = (p) => readFileSync(p, 'utf8').trim().split('\n').map((l) => J
 
 test('contract file declares all required fields and tuning keys', () => {
   for (const k of ['contract_version', 'team', 'build_cmd', 'run_cmd', 'headless_cmd', 'tuning']) assert.ok(k in contract, k);
-  assert.equal(contract.contract_version, '1.0');
-  const keys = ['player_speed', 'carry_capacity', 'lantern_cost', 'lantern_count_night1', 'pickup_radius', 'interact_radius', 'pulse_cost', 'pulse_radius', 'night1_duration_s', 'flames', 'invuln_s', 'hit_drop_ratio', 'pulse_stun_s', 'pulse_push_m', 'pulse_cooldown_s', 'safe_radius', 'shade_speed', 'shade_hit_radius', 'fall_enabled', 'score'];
-  for (const k of keys) assert.ok(k in contract.tuning, k);
-  assert.equal(contract.tuning.lantern_count_night1, 5);
+  assert.equal(contract.contract_version, '1.1');
+  // Ticket-02 Part 1 standard numbers (must match exactly)
+  const standard = {
+    player_speed: 6, carry_capacity: 10, lantern_cost: 10, lantern_count_night1: 5, pickup_radius: 1, interact_radius: 2,
+    pulse_cost: 3, pulse_radius: 5, night1_duration_s: 300, night2_duration_s: 330, night3_duration_s: 360, flames: 3,
+    invuln_s: 1.5, hit_drop_ratio: 0.5, pulse_stun_s: 2, pulse_push_m: 4, pulse_cooldown_s: 3, safe_radius: 6,
+    shade_speed: 4, shade_hit_radius: 1, fall_enabled: true, dash_speed: 14, dash_duration_s: 0.2, dash_cooldown_s: 1.5,
+  };
+  for (const [k, v] of Object.entries(standard)) assert.equal(contract.tuning[k], v, k);
+  assert.deepEqual(contract.tuning.score, { per_mote: 10, per_lantern: 100, per_stun: 5, per_second_left: 2, per_flame_left: 50 });
   for (const k of ['per_mote', 'per_lantern', 'per_stun', 'per_second_left', 'per_flame_left']) assert.ok(k in contract.tuning.score, k);
 });
 
@@ -34,6 +40,7 @@ test('full default run: exit 0, valid JSONL, snapshots every N from tick 0, end 
   const r = cli(['--seed', '5', '--night', '1', '--ticks', '600', '--out', out, '--snapshot-every', '25']);
   assert.equal(r.status, 0, r.stderr);
   const lines = readLines(out);
+  assert.deepEqual(lines[0], { type: 'event', tick: 0, name: 'night_start', data: { night: 1 } });
   const snaps = lines.filter((l) => l.type === 'snapshot');
   assert.deepEqual(snaps.map((s) => s.tick), Array.from({ length: 25 }, (_, i) => i * 25));
   const end = lines.at(-1);
@@ -70,6 +77,13 @@ test('malformed inputs/scenario -> exit 2 with message on stderr', () => {
     ['--scenario', file('bad6.json', { player: { pos: [0, 0] } })],
     ['--scenario', file('bad7.json', { motes: 'many' })],
     ['--scenario', file('bad8.json', '[1,2]')],
+    ['--inputs', file('bad9.json', { frames: [{ tick: 0, dash: 1 }] })],
+    ['--inputs', file('bad10.json', { frames: [{ tick: 0, pause: 'on' }] })],
+    ['--scenario', file('bad11.json', { shades: [{ pos: [1, 0, 1], state: 'angry' }] })],
+    ['--scenario', file('bad12.json', { drifters: [{ pos: [1, 0] }] })],
+    ['--scenario', file('bad13.json', { charms: [{ available: 'yes' }] })],
+    ['--scenario', file('bad14.json', { player: { invuln_ticks: -1 } })],
+    ['--scenario', file('bad15.json', { wind_enabled: 1 })],
   ];
   for (const extra of bad) {
     const r = cli(['--seed', '1', '--night', '1', '--ticks', '10', '--out', out, ...extra]);
@@ -82,5 +96,6 @@ test('other errors -> non-zero exit (missing args, missing file, unknown night)'
   const out = join(dir, 'y.jsonl');
   assert.notEqual(cli(['--seed', '1', '--night', '1', '--out', out]).status, 0);
   assert.notEqual(cli(['--seed', '1', '--night', '1', '--ticks', '10', '--out', out, '--inputs', join(dir, 'missing.json')]).status, 0);
-  assert.notEqual(cli(['--seed', '1', '--night', '9', '--ticks', '10', '--out', out]).status, 0);
+  assert.notEqual(cli(['--seed', '1', '--night', '4', '--ticks', '10', '--out', out]).status, 0);
+  for (const n of ['2', '3']) assert.equal(cli(['--seed', '1', '--night', n, '--ticks', '10', '--out', out]).status, 0, `night ${n}`);
 });

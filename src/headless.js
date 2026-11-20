@@ -1,13 +1,13 @@
 #!/usr/bin/env node
-// Headless CLI per Test Contract v1.0.
-// node src/headless.js --seed <int> --night 1 [--scenario f.json] [--inputs f.json]
+// Headless CLI per Test Contract v1.1.
+// node src/headless.js --seed <int> --night <1|2|3> [--scenario f.json] [--inputs f.json]
 //                      --ticks <int> --out <file.jsonl> [--snapshot-every <int>]
 // Exit codes: 0 ok, 1 usage/runtime error, 2 malformed inputs/scenario file.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { runHeadless } from './sim/run.js';
-import { defaultLanterns } from './sim/game.js';
+import { LANTERN_IDS } from './sim/maps.js';
 import { InputError, validateInputs, validateScenario } from './sim/validate.js';
 
 class UsageError extends Error {}
@@ -37,7 +37,7 @@ function parseArgs(argv) {
     inputs: a.inputs,
   };
   if (!opts.out) throw new UsageError('--out is required');
-  if (opts.night !== 1) throw new UsageError(`--night ${opts.night} is not available (only night 1)`);
+  if (![1, 2, 3].includes(opts.night)) throw new UsageError(`--night must be 1, 2 or 3 (got ${opts.night})`);
   return opts;
 }
 
@@ -58,10 +58,10 @@ function readJson(path, label) {
 function main() {
   const opts = parseArgs(process.argv.slice(2));
   const { tuning } = JSON.parse(readFileSync(join(ROOT, 'game.contract.json'), 'utf8'));
-  const lanternIds = defaultLanterns(tuning).map((l) => l.id);
+  const lanternIds = LANTERN_IDS(opts.night);
   const scenario = opts.scenario ? validateScenario(readJson(opts.scenario, 'scenario'), lanternIds) : null;
   const inputs = opts.inputs ? validateInputs(readJson(opts.inputs, 'inputs')) : null;
-  const { lines } = runHeadless({ tuning, seed: opts.seed, scenario, inputs, ticks: opts.ticks, snapshotEvery: opts.snapshotEvery });
+  const { lines } = runHeadless({ tuning, seed: opts.seed, night: opts.night, scenario, inputs, ticks: opts.ticks, snapshotEvery: opts.snapshotEvery });
   writeFileSync(opts.out, lines.map((l) => JSON.stringify(l)).join('\n') + '\n');
 }
 
