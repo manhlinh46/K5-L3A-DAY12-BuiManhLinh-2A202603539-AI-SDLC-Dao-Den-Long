@@ -50,7 +50,8 @@ md.push('', '## Determinism', '', 'Command (run twice): `node src/headless.js --
 md.push('', '## Headless performance (full night, 21,600 ticks, limit 30 s)', '', '| Night | Wall time | Result |', '|---|---|---|');
 for (const night of [1, 2, 3]) {
   const scen = join(runsDir, `perf-n${night}.scenario.json`);
-  writeFileSync(scen, JSON.stringify({ player: { invuln_ticks: 1000000 } })); // survive the whole night
+  // survive the whole night: invulnerable to shades, and no wind (gusts would push a standing player off Night 3 -> 3 falls)
+  writeFileSync(scen, JSON.stringify({ player: { invuln_ticks: 1000000 }, wind_enabled: false }));
   const t0 = performance.now();
   const r = spawnSync('node', ['src/headless.js', '--seed', '1', '--night', String(night), '--ticks', '21600', '--scenario', scen, '--out', join(runsDir, `perf-n${night}.jsonl`)], { cwd: ROOT });
   const ms = performance.now() - t0;
