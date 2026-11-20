@@ -5,7 +5,7 @@
   "run_cmd": "node server.js",
   "headless_cmd": "node src/headless.js",
   "bench_cmd": "node scripts/bench.js",
-  "soak_cmd": "node --expose-gc --max-semi-space-size=1 --single-threaded scripts/soak.js",
+  "soak_cmd": "node --expose-gc --max-semi-space-size=1 --single-threaded --no-opt scripts/soak.js",
   "tuning": {
     "player_speed": 6.0,
     "carry_capacity": 10,

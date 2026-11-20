@@ -14,7 +14,7 @@
     "test": "node scripts/run-tests.js",
     "proof": "node scripts/proof.js",
     "bench": "node scripts/bench.js --seed 42 --duration 30 --out bench.json",
-    "soak": "node --expose-gc --max-semi-space-size=1 --single-threaded scripts/soak.js --seed 7 --nights 10 --out soak.json",
+    "soak": "node --expose-gc --max-semi-space-size=1 --single-threaded --no-opt scripts/soak.js --seed 7 --nights 10 --out soak.json",
     "build:web": "node scripts/build-web.js"
   },
   "dependencies": {

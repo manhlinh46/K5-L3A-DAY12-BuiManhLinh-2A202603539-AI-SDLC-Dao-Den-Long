@@ -34,6 +34,7 @@
 | 3 | Trường `target` dùng trùng cho hai việc | Rà code trước khi chạy | — |
 | 4 | Vẽ 1.200 draw call | Bench thật | Skill verify-game: đo FPS bằng bench |
 | 4 | Font 16 px còn sót | Script đo font thật | — |
+| 4 | Soak đạt trên Windows nhưng vượt 1.2× RAM trên Linux/macOS (TurboFan + glibc) | CI đỏ → tái hiện bằng Docker node:20/22 | `soak_cmd` thêm `--no-opt`; kiểm tra trên Linux trước khi tag |
 
 ## 5. Harness nào giúp nhiều nhất
 

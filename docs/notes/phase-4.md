@@ -28,7 +28,7 @@
 | D1 | Bench cho bản web | Puppeteer mở Chromium có cửa sổ (không headless) 1280×720, DPR 1. Vsync tắt bằng `--disable-gpu-vsync --disable-frame-rate-limit`. `load_ms` = từ `performance.timeOrigin` của tiến trình Node tới khung hình bench đầu tiên (đã gồm thời gian khởi động Chromium) |
 | D2 | `peak_mem_mb` | Tổng RSS (WorkingSet trên Windows) của mọi tiến trình con Chromium + tiến trình browser, lấy mẫu mỗi 1 s trong lúc đo. Không tính tiến trình Node |
 | D3 | Bóng Mực trong bench | Đúng luật wander (đi về đèn tắt gần nhất / lượn), **không chuyển chase** vì đề yêu cầu "200 Bóng Mực ở trạng thái wander" và tắt sát thương |
-| D4 | Soak: cờ V8 | `--max-semi-space-size=1 --single-threaded --expose-gc`. Đo cho thấy RSS tăng một lần do JIT, vùng nhớ trẻ và các luồng nền rồi đi ngang (3 Đêm 56 MB ≈ 90 Đêm 61 MB). Đây là ổn định chứ không phải rò rỉ. Các cờ giữ RSS sát mức thật; không chạy "khởi động" trước khi đo `mem_start` (sẽ là gian lận số đo) |
+| D4 | Soak: cờ V8 | `--max-semi-space-size=1 --single-threaded --no-opt --expose-gc` (`--no-opt` thêm sau khi CI Linux trượt, xem mục 4.5). Đo cho thấy RSS tăng một lần do JIT, vùng nhớ trẻ và các luồng nền rồi đi ngang (3 Đêm 56 MB ≈ 90 Đêm 61 MB). Đây là ổn định chứ không phải rò rỉ. Các cờ giữ RSS sát mức thật; không chạy "khởi động" trước khi đo `mem_start` (sẽ là gian lận số đo) |
 | D5 | Soak: Đêm thứ i | i = 1…10, seed = 7 + i, Đêm = ((i − 1) mod 3) + 1. Mỗi 30 tick chọn hướng mới theo góc đều. Mỗi tick các nút được tung xác suất độc lập |
 | D6 | Bảng xếp hạng | Lưu qua API của `server.js` vào `data/leaderboard.json` (ghi file tạm rồi đổi tên). Bằng điểm thì `achieved_at` sớm hơn đứng trên. Bản tĩnh dùng localStorage cùng luật (module chung `src/leaderboard-core.js`) |
 | D7 | Phím tạm dừng | Có thể đổi (mặc định P). Esc luôn tạm dừng / thoát menu để người chơi không bị "khóa" nếu gán phím lạ |
@@ -47,4 +47,5 @@
   2. **Soak lần đầu vượt ngưỡng** (59.9 > 58.8 MB). Agent không vội "tối ưu" mà đo thêm 3/10/30/90 Đêm để phân biệt rò rỉ với khởi động, rồi chọn cờ V8. Chạy lại 5 lần đều ở mức 1.074–1.076×.
   3. **Cỡ chữ 16 px** còn sót: phát hiện bằng script Playwright đo font-size thực tế, không phải bằng đọc CSS.
   4. Heredoc bash quá dài làm hỏng lệnh: chuyển sang ghi script ra file rồi chạy.
+  5. **CI đỏ sau khi push `phase-4`/`v1.0.0`:** test soak đạt trên Windows (1.07×) nhưng trượt trên Linux/macOS. Tái hiện bằng Docker (`node:22`, `node:20`): Linux cho **1.36–1.43×** dù đã có `--max-semi-space-size=1 --single-threaded`. RSS đi ngang theo số Đêm, nên nguyên nhân là bộ nhớ trình biên dịch tối ưu TurboFan mà glibc không trả lại hệ điều hành. Thêm `--no-opt` vào `soak_cmd`: Linux Node 22 1.036–1.038×, Linux Node 20 1.04–1.05×, Windows 1.07×, thời gian không đổi (khoảng 1 s cho 10 Đêm). Bài học: số đo bộ nhớ phải kiểm tra trên cả hệ điều hành của máy chấm, không chỉ máy dev.
 - Token (ước tính): khoảng 450–600k input + 70k output cho Phase 4.

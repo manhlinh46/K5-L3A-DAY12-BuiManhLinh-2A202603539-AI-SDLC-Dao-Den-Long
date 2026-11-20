@@ -64,7 +64,7 @@ node server.js --export-leaderboard out.json     # {"entries": [...]} đúng th�
 npm test                                                   # 90 test: unit, CLI, 27 scenario headless, bench scene, soak, leaderboard
 node src/headless.js --seed 1 --night 1 --ticks 600 --out out.jsonl [--scenario s.json] [--inputs i.json]
 node scripts/bench.js --seed 42 --duration 30 --out bench.json     # bench_cmd (mở cửa sổ Chromium 1280×720)
-node --expose-gc --max-semi-space-size=1 --single-threaded scripts/soak.js --seed 7 --nights 10 --out soak.json   # soak_cmd
+node --expose-gc --max-semi-space-size=1 --single-threaded --no-opt scripts/soak.js --seed 7 --nights 10 --out soak.json   # soak_cmd
 npm run proof -- 4                                         # sinh bằng chứng vào docs/proof/phase-4/
 ```
 
